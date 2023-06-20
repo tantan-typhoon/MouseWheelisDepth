@@ -240,7 +240,7 @@ def active_posebone_head_go_by_mouse(context,event,wheelvalue,wheelvaluescale):
 
 # TODO: 動作未チェック
 #ホイールのeventからdepthに加減する数値を割り出す。
-def wheeleventpulse(event,depth):
+def wheeleventpulse(event,depth):#最初は０が入る
 	if event.value == 'PRESS':
 			if event.type == 'WHEELUPMOUSE':				
 				return depth - 1			
@@ -248,7 +248,7 @@ def wheeleventpulse(event,depth):
 				return depth + 1
 			if event.type == 'MIDDLEMOUSE': 
 				return 0 
-	
+			
 	return depth
 
 
