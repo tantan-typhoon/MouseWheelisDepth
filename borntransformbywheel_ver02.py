@@ -20,7 +20,7 @@ bl_info = {
 	"locaton":"Rigging",
 	"description":" transform of born to  depth  direction by mouse wheel",
 	"warnig":"",
-	"support":'TESTING',
+	"support":'COMMUNITY',
 	"wiki_url":"",
 	"tracker_url":"",
 	"category":"pose"
@@ -248,8 +248,8 @@ def wheeleventpulse(event,depth):
 				return depth + 1
 			if event.type == 'MIDDLEMOUSE': 
 				return 0 
-	else:
-		return depth
+	
+	return depth
 
 
 #オブジェクトを使ってテストをするためのクラス。
@@ -427,6 +427,10 @@ class testdammy22_bone(bpy.types.Operator):
 		if not self.is_modalrunning():
 			# TODO: ここでレスト関数を取得				
 			# モーダルモードを開始
+
+			self.depth = 0
+			self.depthresolution = 1
+
 			dammy22.__modalrunning = True
 			mh = context.window_manager.modal_handler_add(self)
 
@@ -608,6 +612,34 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 			mylayout.operator(dammy22.bl_idname, text="Start", icon='PLAY')
 		else:
 			mylayout.operator(dammy22.bl_idname, text="Stop", icon='PAUSE')
+
+addon_keymaps = []
+
+def register_shortcut():
+        wm = bpy.context.window_manager
+        kc = wm.keyconfigs.addon
+        if kc:
+            km = kc.keymaps.new(name="3D View", space_type='VIEW_3D')
+            kmi = km.keymap_items.new(
+            idname=testdammy22_bone.bl_idname,
+            type='Q',
+            value='PRESS',
+            shift=True,
+            ctrl=False,
+            alt=False,
+            )
+        # ショートカットキー一覧に登録
+        addon_keymaps.append((km, kmi))
+
+def unregister_shortcut():
+    for km, kmi in addon_keymaps:
+    # ショートカットキーの登録解除
+    # 引数
+    #   第1引数: km.keymap_items.newで作成したショートカットキー
+    #            [bpy.types.KeyMapItem]
+        km.keymap_items.remove(kmi)
+    # ショートカットキー一覧をクリア
+    addon_keymaps.clear()
 	
 
 
@@ -633,11 +665,14 @@ classes = [
 def register():
 	for c in classes:
 		bpy.utils.register_class(c)
+
+	register_shortcut()
 	bpy.types.VIEW3D_MT_pose.append(menu_fn_pose)
 	bpy.types.VIEW3D_MT_object.append(menu_fn_object)
 
 
 def unregister():
+	unregister_shortcut()
 	bpy.types.VIEW3D_MT_pose.remove(menu_fn_pose)
 	bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
 	for c in classes:
