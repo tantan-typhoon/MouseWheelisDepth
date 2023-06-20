@@ -343,6 +343,12 @@ class testdammy22(bpy.types.Operator):
 				dammy22.__modalrunning = True
 				mh = context.window_manager.modal_handler_add(self)
 
+				bpy.ops.mesh.primitive_uv_sphere_add(radius= 1,location = Vector((0,0,0)),align='CURSOR')
+				self.obj_sphere = bpy.context.active_object
+				self.obj_sphere.rotation_mode = 'QUATERNION'
+				
+				self.init_matrix_basis = self.obj_sphere.matrix_world.copy()
+
 				return {'RUNNING_MODAL'}
 				#return {'PASS_THROUGH'}
 			
