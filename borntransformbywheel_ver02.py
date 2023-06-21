@@ -397,6 +397,8 @@ class testdammy22_bone(bpy.types.Operator):
 	def modal(self,context,event):
 		
 		region,space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
+		#カスタムプロパティのためのsceneオブジェクトの取得
+		scene = context.scene
 
 		#escキーで終了
 		if event.type == 'ESC':
@@ -406,8 +408,7 @@ class testdammy22_bone(bpy.types.Operator):
 		
 		#ホイールのイベントからデプス値を設定
 		self.depth =  wheeleventpulse(event,self.depth)
-		#カスタムプロパティのためのsceneオブジェクトの取得
-		scene = context.scene
+		
 		#解像度を掛け算
 		d = scene.depthresolution * self.depth
 		
@@ -434,7 +435,8 @@ class testdammy22_bone(bpy.types.Operator):
 		self.apbone.rotation_quaternion = q
 
 		#長さのスケールを変更
-		self.apbone.scale.y = V_m_rpbone.length/vector_y.length
+		if scene.LengthOption :
+			self.apbone.scale.y = V_m_rpbone.length/vector_y.length
 		
 
 		print("rummodeal",mouseregion)
@@ -633,6 +635,7 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 
 		layout.operator(testdammy22_bone.bl_idname, text="WLD")
 		layout.prop(scene,"depthresolution",text = "depthresolution")
+		layout.prop(scene,"LengthOption",text = "scale change")
 		
 def init_props():
     scene = bpy.types.Scene
