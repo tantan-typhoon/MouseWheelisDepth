@@ -1,6 +1,6 @@
 ﻿import typing
 import bpy
-from bpy.props import FloatVectorProperty, EnumProperty
+from bpy.props import IntProperty,FloatVectorProperty, EnumProperty,FloatProperty
 from bpy.types import Context, Event
 from mathutils import *
 import math
@@ -372,7 +372,13 @@ class testdammy22_bone(bpy.types.Operator):
 
 	#invoke内で初期化している。
 	depth = 0
-	depthresolution = 1
+	depthresolution:FloatProperty(
+        name="depthresolution",
+        description="depthresolution",
+        default=1,
+        min=0,
+        max=500
+    )
 	
 	init_matrix_basis = None
 	apbone = None
