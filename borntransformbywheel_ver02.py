@@ -369,16 +369,8 @@ class testdammy22_bone(bpy.types.Operator):
 	__modalrunning = False
 	obj_sphere = None
 	mvec_bone= Vector((0,0,0))
-
-	#invoke内で初期化している。
+	
 	depth = 0
-	depthresolution:FloatProperty(
-        name="depthresolution",
-        description="depthresolution",
-        default=1,
-        min=0,
-        max=500
-    )
 	
 	init_matrix_basis = None
 	apbone = None
@@ -414,9 +406,14 @@ class testdammy22_bone(bpy.types.Operator):
 		
 		#ホイールのイベントからデプス値を設定
 		self.depth =  wheeleventpulse(event,self.depth)
-
+		#カスタムプロパティのためのsceneオブジェクトの取得
+		scene = context.scene
 		#解像度を掛け算
-		d = self.depthresolution * self.depth
+		d = scene.depthresolution * self.depth
+		
+		
+		print("depth",scene.depthresolution)
+		print("d",d)
 
 		#イベントからマウスのリージョン座標を取得
 		mouseregion = vector_rigion_by_mouse(context,event)
@@ -444,7 +441,7 @@ class testdammy22_bone(bpy.types.Operator):
 
 			#初期化
 			self.depth = 0
-			self.depthresolution = 0.1
+			
 
 			dammy22.__modalrunning = True
 			mh = context.window_manager.modal_handler_add(self)
@@ -629,10 +626,7 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 
 		layout.operator(testdammy22_bone.bl_idname, text="WLD")
 		layout.prop(scene,"depthresolution",text = "depthresolution")
-
 		
-
-
 def init_props():
     scene = bpy.types.Scene
     scene.depthresolution = FloatProperty(
@@ -640,7 +634,7 @@ def init_props():
         description="Distance moved in one wheel revolution",
         default=1,
         min=0,
-        max=500
+        #max=500
     )
 
 	#ボーンの長さを変えるかどうかのオプション、Falseにすると向きだけが変わるようになる。
