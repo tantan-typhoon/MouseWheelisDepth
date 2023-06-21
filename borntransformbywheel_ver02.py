@@ -369,6 +369,8 @@ class testdammy22_bone(bpy.types.Operator):
 	__modalrunning = False
 	obj_sphere = None
 	mvec_bone= Vector((0,0,0))
+
+	#invoke内で初期化している。
 	depth = 0
 	depthresolution = 1
 	
@@ -434,8 +436,9 @@ class testdammy22_bone(bpy.types.Operator):
 			# TODO: ここでレスト関数を取得				
 			# モーダルモードを開始
 
+			#初期化
 			self.depth = 0
-			self.depthresolution = 1
+			self.depthresolution = 0.1
 
 			dammy22.__modalrunning = True
 			mh = context.window_manager.modal_handler_add(self)
@@ -609,15 +612,23 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 	bl_region_type = 'UI'
 	bl_category = "dammy22"
 	bl_context = "posemode"
+
+	depthresolution = 0
 	
 	def draw(self,context):
-		#print("draw on DAMMYpanel")
-		mylayout = self.layout
-		#props = mylayout.operator(dammy22.bl_idname)
-		if not dammy22.is_modalrunning():
-			mylayout.operator(dammy22.bl_idname, text="Start", icon='PLAY')
-		else:
-			mylayout.operator(dammy22.bl_idname, text="Stop", icon='PAUSE')
+		
+		layout = self.layout
+
+		#カスタムプロパティをシーンオブジェクトに格納しているのでシーンオブジェクトの読み込み
+		scene = context.scene
+
+		layout.operator(testdammy22_bone.bl_idname, text="WLD")
+
+		
+
+
+
+
 
 addon_keymaps = []
 
