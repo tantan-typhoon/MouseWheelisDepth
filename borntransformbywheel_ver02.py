@@ -422,13 +422,20 @@ class testdammy22_bone(bpy.types.Operator):
 		#ボーン座標上のy向き単位ベクトル
 		vector_y = Vector((0,1,0))
 		
-		w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
-		V_m_rpbone = w_to_rpbone @ vector_mouse_world
+		#ワールド座標からレストポーズ座標への変換行列を取得
+		M_w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
+
+		#マウスのワールド座標ベクトルをレストポーズ座標へ変換
+		V_m_rpbone = M_w_to_rpbone @ vector_mouse_world
 		
+		#ボーン座標のY軸方向ベクトルとマウスの座標ベクトルの回転を取得し回転。
 		self.apbone.rotation_mode = 'QUATERNION'
 		q = vector_y.rotation_difference(V_m_rpbone)
 		self.apbone.rotation_quaternion = q
- 
+
+		#長さのスケールを変更
+		self.apbone.scale.y = V_m_rpbone.length/vector_y.length
+		
 
 		print("rummodeal",mouseregion)
 		return {'RUNNING_MODAL'}
