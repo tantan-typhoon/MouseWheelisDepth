@@ -619,8 +619,7 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 	bl_category = "dammy22"
 	bl_context = "posemode"
 
-	depthresolution = 0
-	
+
 	def draw(self,context):
 		
 		layout = self.layout
@@ -629,12 +628,32 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 		scene = context.scene
 
 		layout.operator(testdammy22_bone.bl_idname, text="WLD")
+		layout.prop(scene,"depthresolution",text = "depthresolution")
 
 		
 
 
+def init_props():
+    scene = bpy.types.Scene
+    scene.depthresolution = FloatProperty(
+        name="depthresolution",
+        description="Distance moved in one wheel revolution",
+        default=1,
+        min=0,
+        max=500
+    )
 
+	#ボーンの長さを変えるかどうかのオプション、Falseにすると向きだけが変わるようになる。
+    scene.LengthOption = BoolProperty(
+        name="LengthOption",
+        description="Whether to change the length",
+        default=True
+    )
 
+def clear_props():
+    scene = bpy.types.Scene
+    del scene.depthresolution
+    del scene.LengthOption
 
 addon_keymaps = []
 
@@ -689,6 +708,7 @@ def register():
 	for c in classes:
 		bpy.utils.register_class(c)
 
+	init_props()
 	register_shortcut()
 	bpy.types.VIEW3D_MT_pose.append(menu_fn_pose)
 	bpy.types.VIEW3D_MT_object.append(menu_fn_object)
@@ -698,6 +718,8 @@ def unregister():
 	unregister_shortcut()
 	bpy.types.VIEW3D_MT_pose.remove(menu_fn_pose)
 	bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
+
+	clear_props()
 	for c in classes:
 		bpy.utils.unregister_class(c)
 
