@@ -401,7 +401,7 @@ class testdammy22_bone(bpy.types.Operator):
 		scene = context.scene
 
 		#escキーで終了
-		if event.type == 'ESC':
+		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			print("Pushesc")
 			dammy22.__modalrunning = False
 			return {'FINISHED'}
