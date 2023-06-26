@@ -361,6 +361,114 @@ class testdammy22(bpy.types.Operator):
 				dammy22.__modalrunning = False				
 				return {'FINISHED'}
 		
+
+class testdammy22_lcation(bpy.types.Operator):
+	bl_idname = "test.testdammy22_location"
+	bl_label = "testdammy22ver02_location"
+	bl_description = ""
+	#bl_options = {'REGISTER','UNDO'}
+
+	__modalrunning = False
+	obj_sphere = None
+	mvec= Vector((0,0,0))
+	init_matrix_basis = None
+	#invokeで初期化されている。
+	depth = 0
+	
+	r_point:FloatVectorProperty( 
+		name = "r_point",
+		description = "",
+		default = (0,0,0),
+		subtype = 'XYZ',
+		unit = 'LENGTH',
+		#update = execute
+	)
+
+	@classmethod
+	def is_modalrunning(cls):
+		return cls.__modalrunning
+	
+	def execute(self,context):
+
+		print("hello testdammy22")
+		
+		radius = 0.5
+		location = Vector((0,0,5))
+		#r_point = Vector((0,5,0))
+		self.r_point =Vector((0,-5,0))
+		
+		bpy.ops.mesh.primitive_uv_sphere_add(radius= radius,location = location,align='CURSOR')
+		obj_sphere = bpy.context.active_object
+		obj_sphere.rotation_mode = 'QUATERNION'
+		q = vector_rotaion_quaternion(location,self.r_point)
+		obj_sphere.rotation_quaternion = q
+
+
+		return {'FINISHED'}
+	
+	
+	#モーダルモードの呼び出し
+	def modal(self,context,event):
+		print("run modal")
+
+		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
+
+		#escキーで終了
+		if event.type == 'ESC':
+			print("Pushesc")
+			dammy22.__modalrunning = False
+			return {'FINISHED'}
+		
+		#イベントからマウスのリージョン座標を取得
+		mouseregion = vector_rigion_by_mouse(context,event)
+		print(mouseregion)
+
+		self.depth = wheeleventpulse(event,self.depth)
+		
+		#このあたりが何かおかしい,ローテーションの位置
+		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
+		vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((self.depth,0,0)))
+
+		mvec_local = self.init_matrix_basis @ vector_world
+		#print(mvec)
+		self.obj_sphere.show_axis = True
+		
+		
+		#restrotation(mvec,Vector((0,0,1)),self.obj_sphere)
+
+		#第一引数が定数ベクトルだと上手く言っている。
+		#restrotation(Vector((0,1,0)),Vector((0,0,1)),self.obj_sphere)
+		restrotation(mvec_local,Vector((0,0,1)),self.obj_sphere)
+
+		
+
+		return {'RUNNING_MODAL'}
+	
+	# TODO: ここでrestの座標変換を変数に格納する。
+	#最初の呼び出し
+	def invoke(self, context, event):
+		if context.area.type == 'VIEW_3D':
+			
+			if not self.is_modalrunning():
+				
+				# モーダルモードを開始
+				dammy22.__modalrunning = True
+				mh = context.window_manager.modal_handler_add(self)
+				#変数の初期化
+				self.depth = 0
+				bpy.ops.mesh.primitive_uv_sphere_add(radius= 1,location = Vector((0,0,0)),align='CURSOR')
+				self.obj_sphere = bpy.context.active_object
+				self.obj_sphere.rotation_mode = 'QUATERNION'
+				
+				self.init_matrix_basis = self.obj_sphere.matrix_world.copy()
+
+				return {'RUNNING_MODAL'}
+				#return {'PASS_THROUGH'}
+			
+			else:
+				#__modalrunningがtrueなら終了
+				dammy22.__modalrunning = False				
+				return {'FINISHED'}
 	
 		
 # TODO: #bone用テストクラス
@@ -701,6 +809,7 @@ def menu_fn_pose(self,context):
 def menu_fn_object(self,context):
 	self.layout.separator()
 	self.layout.operator(testdammy22.bl_idname)
+	self.layout.operator(testdammy22_lcation.bl_idname)
 
 
 classes = [
@@ -708,6 +817,7 @@ classes = [
 	testdammy22,
 	DAMMY22VER2_PT_PaneleObject,
 	testdammy22_bone,
+	testdammy22_lcation,
 
 ]
 
