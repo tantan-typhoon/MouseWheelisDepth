@@ -1,6 +1,6 @@
 ﻿import typing
 import bpy
-from bpy.props import FloatVectorProperty, EnumProperty
+from bpy.props import IntProperty,FloatVectorProperty, EnumProperty,FloatProperty
 from bpy.types import Context, Event
 from mathutils import *
 import math
@@ -369,8 +369,8 @@ class testdammy22_bone(bpy.types.Operator):
 	__modalrunning = False
 	obj_sphere = None
 	mvec_bone= Vector((0,0,0))
+	
 	depth = 0
-	depthresolution = 1
 	
 	init_matrix_basis = None
 	apbone = None
@@ -397,18 +397,24 @@ class testdammy22_bone(bpy.types.Operator):
 	def modal(self,context,event):
 		
 		region,space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
+		#カスタムプロパティのためのsceneオブジェクトの取得
+		scene = context.scene
 
 		#escキーで終了
-		if event.type == 'ESC':
+		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			print("Pushesc")
 			dammy22.__modalrunning = False
 			return {'FINISHED'}
 		
 		#ホイールのイベントからデプス値を設定
 		self.depth =  wheeleventpulse(event,self.depth)
-
+		
 		#解像度を掛け算
-		d = self.depthresolution * self.depth
+		d = scene.depthresolution * self.depth
+		
+		
+		print("depth",scene.depthresolution)
+		print("d",d)
 
 		#イベントからマウスのリージョン座標を取得
 		mouseregion = vector_rigion_by_mouse(context,event)
@@ -417,13 +423,21 @@ class testdammy22_bone(bpy.types.Operator):
 		#ボーン座標上のy向き単位ベクトル
 		vector_y = Vector((0,1,0))
 		
-		w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
-		V_m_rpbone = w_to_rpbone @ vector_mouse_world
+		#ワールド座標からレストポーズ座標への変換行列を取得
+		M_w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
+
+		#マウスのワールド座標ベクトルをレストポーズ座標へ変換
+		V_m_rpbone = M_w_to_rpbone @ vector_mouse_world
 		
+		#ボーン座標のY軸方向ベクトルとマウスの座標ベクトルの回転を取得し回転。
 		self.apbone.rotation_mode = 'QUATERNION'
 		q = vector_y.rotation_difference(V_m_rpbone)
 		self.apbone.rotation_quaternion = q
- 
+
+		#長さのスケールを変更
+		if scene.LengthOption :
+			self.apbone.scale.y = V_m_rpbone.length/vector_y.length
+		
 
 		print("rummodeal",mouseregion)
 		return {'RUNNING_MODAL'}
@@ -434,8 +448,9 @@ class testdammy22_bone(bpy.types.Operator):
 			# TODO: ここでレスト関数を取得				
 			# モーダルモードを開始
 
+			#初期化
 			self.depth = 0
-			self.depthresolution = 1
+			
 
 			dammy22.__modalrunning = True
 			mh = context.window_manager.modal_handler_add(self)
@@ -609,15 +624,40 @@ class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
 	bl_region_type = 'UI'
 	bl_category = "dammy22"
 	bl_context = "posemode"
-	
+
+
 	def draw(self,context):
-		#print("draw on DAMMYpanel")
-		mylayout = self.layout
-		#props = mylayout.operator(dammy22.bl_idname)
-		if not dammy22.is_modalrunning():
-			mylayout.operator(dammy22.bl_idname, text="Start", icon='PLAY')
-		else:
-			mylayout.operator(dammy22.bl_idname, text="Stop", icon='PAUSE')
+		
+		layout = self.layout
+
+		#カスタムプロパティをシーンオブジェクトに格納しているのでシーンオブジェクトの読み込み
+		scene = context.scene
+
+		layout.operator(testdammy22_bone.bl_idname, text="WLD")
+		layout.prop(scene,"depthresolution",text = "depthresolution")
+		layout.prop(scene,"LengthOption",text = "scale change")
+		
+def init_props():
+    scene = bpy.types.Scene
+    scene.depthresolution = FloatProperty(
+        name="depthresolution",
+        description="Distance moved in one wheel revolution",
+        default=1,
+        min=0,
+        #max=500
+    )
+
+	#ボーンの長さを変えるかどうかのオプション、Falseにすると向きだけが変わるようになる。
+    scene.LengthOption = BoolProperty(
+        name="LengthOption",
+        description="Whether to change the length",
+        default=True
+    )
+
+def clear_props():
+    scene = bpy.types.Scene
+    del scene.depthresolution
+    del scene.LengthOption
 
 addon_keymaps = []
 
@@ -672,6 +712,7 @@ def register():
 	for c in classes:
 		bpy.utils.register_class(c)
 
+	init_props()
 	register_shortcut()
 	bpy.types.VIEW3D_MT_pose.append(menu_fn_pose)
 	bpy.types.VIEW3D_MT_object.append(menu_fn_object)
@@ -681,6 +722,8 @@ def unregister():
 	unregister_shortcut()
 	bpy.types.VIEW3D_MT_pose.remove(menu_fn_pose)
 	bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
+
+	clear_props()
 	for c in classes:
 		bpy.utils.unregister_class(c)
 
