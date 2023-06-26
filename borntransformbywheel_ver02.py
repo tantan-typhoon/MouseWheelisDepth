@@ -242,17 +242,17 @@ def active_posebone_head_go_by_mouse(context,event,wheelvalue,wheelvaluescale):
 #ホイールのeventからdepthに加減する数値を割り出す。
 def wheeleventpulse(event,depth):#最初は０が入る
 	if event.value == 'PRESS':
-			if event.type == 'WHEELUPMOUSE':				
-				return depth - 1			
+			if event.type == 'WHEELUPMOUSE':
+				return depth - 1
 			if event.type == 'WHEELDOWNMOUSE':
 				return depth + 1
-			if event.type == 'MIDDLEMOUSE': 
-				return 0 
-			
+			if event.type == 'MIDDLEMOUSE':
+				return 0
+
 	return depth
 
 
-#オブジェクトを使ってテストをするためのクラス。
+#オブジェクトを使ってテストをするためのクラス。Z軸マウスに追従する
 class testdammy22(bpy.types.Operator):
 	bl_idname = "test.testdammy22ver02"
 	bl_label = "testdammy22ver02"
@@ -263,9 +263,10 @@ class testdammy22(bpy.types.Operator):
 	obj_sphere = None
 	mvec= Vector((0,0,0))
 	init_matrix_basis = None
+	#invokeで初期化されている。
+	depth = 0
 	
 	r_point:FloatVectorProperty( 
-		
 		name = "r_point",
 		description = "",
 		default = (0,0,0),
@@ -313,10 +314,12 @@ class testdammy22(bpy.types.Operator):
 		mouseregion = vector_rigion_by_mouse(context,event)
 		print(mouseregion)
 
+		self.depth = wheeleventpulse(event,self.depth)
+		
 		#このあたりが何かおかしい,ローテーションの位置
 		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
-		vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((0,0,0)))
-	
+		vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((self.depth,0,0)))
+
 		mvec_local = self.init_matrix_basis @ vector_world
 		#print(mvec)
 		self.obj_sphere.show_axis = True
@@ -342,7 +345,8 @@ class testdammy22(bpy.types.Operator):
 				# モーダルモードを開始
 				dammy22.__modalrunning = True
 				mh = context.window_manager.modal_handler_add(self)
-
+				#変数の初期化
+				self.depth = 0
 				bpy.ops.mesh.primitive_uv_sphere_add(radius= 1,location = Vector((0,0,0)),align='CURSOR')
 				self.obj_sphere = bpy.context.active_object
 				self.obj_sphere.rotation_mode = 'QUATERNION'
