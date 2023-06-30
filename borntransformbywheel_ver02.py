@@ -52,27 +52,7 @@ def get_region_and_space(context, area_type, region_type, space_type):
 
 	return (region, space)
 
-def circledraw(context,target_point_world,wheeldepth,event):
-	#print("circledrawhead")
-	#xx = event.mouse_x * wheeldepth
-	region, space = get_region_and_space(
-		context, 'VIEW_3D', 'WINDOW', 'VIEW_3D'
-	)
-	if (region is None) or (space is None):
-		return
 
-	vec = view3d_utils.location_3d_to_region_2d(
-		region,
-		space.region_3d,
-		Vector(target_point_world)
-	)
-
-	color = [1,1,1,1]
-	#print("circledraw22")
-	gpu_extras.presets.draw_circle_2d(Vector((20,20)),color,100)#vec,color,50)#wheeldepth)
-
-	
-	context.area.tag_redraw()
 
 def textdraw(context,event,target_point_world):
 	j = 1
@@ -94,8 +74,6 @@ def textdraw(context,event,target_point_world):
 
 #ハンドルには一つの関数しか入れられないので一つにまとめる。
 def drawhandlefunc(context,target_point_world,wheeldepth,event):
-	#circledraw(context,target_point_world,wheeldepth)
-	circledraw(context,target_point_world,wheeldepth,event)
 	textdraw(context,event,target_point_world)
 
 #逆変換を求める関数
