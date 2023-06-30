@@ -88,13 +88,6 @@ def vector_rigion_by_mouse(context,event):
 	vm = Vector((event.mouse_region_x,event.mouse_region_y))
 	return vm
 
-# TODO: #動作不具合:matrix_basisが回転してしまうのでできない。
-def convert_region_to_restlocal(context,vector_region,obj_local,depth):
-	region, space  = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
-	vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,vector_region,Vector((depth,0,0)))
-	matrix_world_to_restlocal = matrixinvert(obj_local.matrix_basis)
-	return matrix_world_to_restlocal @ vector_world 
-
 #動作チェック済み
 #親のcostumposeに依存した子のrestposebone座標（親カスタム子レスト）とlocal座標の位置ベクトルをrestpose座標変換する。
 #第一引数pose座標に当たるposeボーンオブジェクト,第二引数変換したいローカル座標のベクトル
