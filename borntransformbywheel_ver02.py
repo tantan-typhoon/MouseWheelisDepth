@@ -528,153 +528,6 @@ class testdammy22_bone(bpy.types.Operator):
 			return {'FINISHED'}
 
 
-class dammy22(bpy.types.Operator):
-	print("dammy22classhead******************************************")
-
-	bl_idname = "test.dammy22ver02"
-	bl_label = "transform to born depth"
-	bl_description = "transform of born to  depth  direction by mouse wheel"
-	#bl_options = {'REGISTER','UNDO'}
-
-	__modalrunning = False
-	__countmodal = 0
-	__select_location = [0,0,0]
-	__drawhandle = None
-	#でバグ用
-	wacthvalue1 = {}
-	__ddvec = Vector((0,0,0))
-
-	wheelvalue = 0
-
-
-	#dammy22インスタンスに帰属するプロパティなのでオペレータが完了されたら解放される？
-	select_location:FloatVectorProperty( 
-		
-		name = "select_location",
-		description = "",
-		default = [1,1,1],
-		subtype = 'XYZ',
-		unit = 'LENGTH',
-		#update = testmonono
-	)
-
-	@classmethod
-	def is_modalrunning(cls):
-		return cls.__modalrunning
-
-
-	@classmethod
-	def __drawhandle_add(cls,context,target_point_world,wheeldepth,event):
-		if cls.__drawhandle is None:
-			cls.__drawhandle = bpy.types.SpaceView3D.draw_handler_add(
-				drawhandlefunc, (context,target_point_world,wheeldepth,event), 'WINDOW', 'POST_PIXEL'
-				)
-		print("drawhandleadd***********************************")
-
-	@classmethod
-	def __drawhandle_remove(cls, context):
-		if not(cls.__drawhandle is  None):
-		
-			bpy.types.SpaceView3D.draw_handler_remove(
-				cls.__drawhandle, 'WINDOW'
-			)
-			cls.__drawhandle = None
-			print("drawhandleremove**************************************")
-				
-	def execute(self,context):
-		print("excutestart*******************************************************")
-		
-		#self.active_posebone_head_go_by_3Dpoint(context,self.select_location)
-
-		return {'FINISHED'}
-
-	def modal(self,context,event):
-		print("modalhead*********************************************")
-	
-		if context.area:
-			#print("redraw")
-			
-			context.area.tag_redraw()
-
-		#print("self.select_location on modalhead",self.select_location)
-		
-		
-		if not self.is_modalrunning():
-			print("cancellmodal*************************************")
-			return{'CANCELLED'}
-
-		if event.type == 'ESC':
-			print("Pushesc*****************************************")
-
-			context.area.tag_redraw()
-
-			#モーダルモードステータスオフ、ハンドラの解除ポーズモードになるはず。
-			dammy22.__modalrunning = False
-			print("callmodalremovefunc************************************************")
-			self.__drawhandle_remove(context)
-			self.__drawhandle = None
-
-			print("ESC MODAL FINISH*************************************")
-			return {'FINISHED'}
-		if event.value == 'PRESS':
-			if event.type == 'WHEELUPMOUSE':
-				self.wheelvalue = self.wheelvalue + 1
-				return {'RUNNING_MODAL'}
-			
-			if event.type == 'WHEELDOWNMOUSE':
-				self.wheelvalue = self.wheelvalue - 1
-				return {'RUNNING_MODAL'}
-			
-			if event.type == 'MIDDLEMOUSE': 
-				self.wheelvalue = 0
-				return {'RUNNING_MODAL'}
-			if event.type == 'Y':
-				return {'PASS_THROUGH'}
-
-
-		dc = active_posebone_head_go_by_mouse(context,event,self.wheelvalue,1)
-		dammy22.wacthvalue1.update(dc)
-		dammy22.__ddvec = dc
-		print("updatewacthvalue1",dammy22.wacthvalue1)
-
-
-		context.area.tag_redraw()
-		#パススルーだとカスタムプロパティは動くが、ボーンを動かす関数がは動かない。→プロパティのアップデートに入れないとだめ？
-		return {'PASS_THROUGH'}
-
-		#モーダルモードだとシェーダしか動かない。おわってから処理をする。
-		#return {'RUNNING_MODAL'}
-
-	def invoke(self, context, event):
-		print("invokehead")
-
-		if context.area.type == 'VIEW_3D':
-			# パネル [Delete Faces] のボタン [Start] が押されたときの処理
-			if not self.is_modalrunning():
-				dammy22.__modalrunning = True
-
-				# モーダルモードを開始
-				print("invokemodalhandleadd***********************************************************************")
-				mh = context.window_manager.modal_handler_add(self)
-
-				if self.__drawhandle is None:
-					print("invokeCalladddrawhandle*****************************************************")
-					self.__drawhandle_add(context,self.select_location,self.select_location[2],event)
-				elif not(self.__drawhandle is None):
-					
-					self.__drawhandle_remove(context)
-
-				return {'RUNNING_MODAL'}
-
-			# パネル [Delete Faces] のボタン [Stop] が押されたときの処理
-			else:
-				dammy22.__modalrunning = False
-				print("modal invoke finish********************************************************")
-			return {'FINISHED'}
-		else:
-			return {'CANCELLED'}
-		
-		return {'FINISHED'}
 
 
 class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
@@ -750,7 +603,6 @@ def unregister_shortcut():
 
 def menu_fn_pose(self,context):
 	self.layout.separator()
-	self.layout.operator(dammy22.bl_idname)
 	self.layout.operator(testdammy22_bone.bl_idname)
 
 def menu_fn_object(self,context):
@@ -760,7 +612,6 @@ def menu_fn_object(self,context):
 
 
 classes = [
-	dammy22,
 	testdammy22,
 	DAMMY22VER2_PT_PaneleObject,
 	testdammy22_bone,
