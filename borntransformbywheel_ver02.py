@@ -26,7 +26,7 @@ bl_info = {
 	"category":"pose"
 }
 
-
+#リージョンとスペースを取得する関数
 def get_region_and_space(context, area_type, region_type, space_type):
 	region = None
 	area = None
@@ -787,7 +787,6 @@ classes = [
 	DAMMY22VER2_PT_PaneleObject,
 	testdammy22_bone,
 	testdammy22_lcation,
-
 ]
 
 
