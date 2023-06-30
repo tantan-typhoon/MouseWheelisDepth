@@ -96,18 +96,6 @@ def convert_local_to_custumrestpose(aposebone,local_vector):
 	local_to_restpose = aposebone.matrix_basis @ local_to_custumpose
 	return local_to_restpose @ local_vector
 
-#動作チェック済み
-#二つのベクトルのローテーションをクオータニオンで取得。
-def vector_rotaion_quaternion(v1,v2):
-	q = v1.rotation_difference(v2)
-	return q
-
-# TODO: 動作未チェック
-#オブジェクトをクオータニオンで回転させる
-def rotation_object_quaternion(quaternion,obj):
-	obj.rotation_mode = 'QUATERNION'
-	obj.rotation_quaternion = quaternion
-
 # TODO: 動作未チェック
 #matrix_basisを単位行列でリセットしてからベクトルとローテーションを得る関数
 #第一引数は回転したい方向ベクトル（ローカル座標）、第二引数はオブジェクトの基準方向（ローカル）、第三引数は回転させるオブジェクト
@@ -241,21 +229,6 @@ class testdammy22(bpy.types.Operator):
 		return cls.__modalrunning
 	
 	def execute(self,context):
-
-		print("hello testdammy22")
-		
-		radius = 0.5
-		location = Vector((0,0,5))
-		#r_point = Vector((0,5,0))
-		self.r_point =Vector((0,-5,0))
-		
-		bpy.ops.mesh.primitive_uv_sphere_add(radius= radius,location = location,align='CURSOR')
-		obj_sphere = bpy.context.active_object
-		obj_sphere.rotation_mode = 'QUATERNION'
-		q = vector_rotaion_quaternion(location,self.r_point)
-		obj_sphere.rotation_quaternion = q
-
-
 		return {'FINISHED'}
 	
 	
