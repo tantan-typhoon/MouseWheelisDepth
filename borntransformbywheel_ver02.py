@@ -88,15 +88,6 @@ def vector_rigion_by_mouse(context,event):
 	vm = Vector((event.mouse_region_x,event.mouse_region_y))
 	return vm
 
-#動作チェック済み（正常）
-#リージョン座標ベクトルををローカル座標ベクトルに変換する。
-#第一引数リージョン座標上の位置ベクトル、第二引数ローカル座標に対応するオブジェクト、第三引数深さベクトル(Vector((x,0,0))でxの値のみ有効になる）戻り値ローカル座標上のベクトル。
-def convert_region_to_local(context,vector_region,obj_local,depth):
-	region, space  = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
-	vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,vector_region,Vector((depth,0,0)))
-	matrix_world_to_local = matrixinvert(obj_local.matrix_world)
-	return (matrix_world_to_local @ vector_world)
-
 # TODO: #動作不具合:matrix_basisが回転してしまうのでできない。
 def convert_region_to_restlocal(context,vector_region,obj_local,depth):
 	region, space  = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
@@ -239,7 +230,6 @@ class testdammy22(bpy.types.Operator):
 
 	__modalrunning = False
 	obj_sphere = None
-	mvec= Vector((0,0,0))
 	init_matrix_basis = None
 	#invokeで初期化されている。
 	depth = 0
@@ -285,7 +275,7 @@ class testdammy22(bpy.types.Operator):
 		#escキーで終了
 		if event.type == 'ESC':
 			print("Pushesc")
-			dammy22.__modalrunning = False
+			testdammy22.__modalrunning = False
 			return {'FINISHED'}
 		
 		#イベントからマウスのリージョン座標を取得
@@ -321,7 +311,7 @@ class testdammy22(bpy.types.Operator):
 			if not self.is_modalrunning():
 				
 				# モーダルモードを開始
-				dammy22.__modalrunning = True
+				testdammy22.__modalrunning = True
 				mh = context.window_manager.modal_handler_add(self)
 				#変数の初期化
 				self.depth = 0
@@ -336,7 +326,7 @@ class testdammy22(bpy.types.Operator):
 			
 			else:
 				#__modalrunningがtrueなら終了
-				dammy22.__modalrunning = False				
+				testdammy22.__modalrunning = False				
 				return {'FINISHED'}
 		
 #マウスとホイールを使ってオブジェクトの位置を動かす。
@@ -462,7 +452,7 @@ class testdammy22_bone(bpy.types.Operator):
 		#escキーで終了
 		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			print("Pushesc")
-			dammy22.__modalrunning = False
+			testdammy22_bone.__modalrunning = False
 			return {'FINISHED'}
 		
 		#ホイールのイベントからデプス値を設定
@@ -511,7 +501,7 @@ class testdammy22_bone(bpy.types.Operator):
 			self.depth = 0
 			
 
-			dammy22.__modalrunning = True
+			testdammy22_bone.__modalrunning = True
 			mh = context.window_manager.modal_handler_add(self)
 
 			self.apbone = bpy.context.active_pose_bone
@@ -524,7 +514,7 @@ class testdammy22_bone(bpy.types.Operator):
 			return {'RUNNING_MODAL'}
 
 		else:
-			dammy22.__modalrunning = False				
+			testdammy22_bone.__modalrunning = False				
 			return {'FINISHED'}
 
 

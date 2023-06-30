@@ -17,7 +17,11 @@ bl_info{}
 
         関数：マウスホイールの挙動を変数に渡す関数
         def wheeleventpulse(event,depth):
-            return depth
+            return depth（変化後のデプス）
+
+        関数：マウスをリージョン座標に変換する。
+        def vector_rigion_by_mouse(context,event):
+            return vm（リージョン座標ベクトル）
 
     描画関数部
         関数：デプスの値がどれぐらいか数値で表す。
@@ -35,6 +39,7 @@ bl_info{}
             クラス変数部
                 モーダルモード判別変数（boolm）
                 初期ベースマトリクス格納変数
+                アクティブオブジェクト格納変数
                 
 
             クラス関数部
@@ -65,6 +70,7 @@ bl_info{}
 共通部
     プレファレンスクラス（preferenceクラス）
         デプス解像度（グリッドディスタンス）：フローカスタムプロパティ
+        モーダルモード判別変数
 
 登録部
     メニューファンクション
