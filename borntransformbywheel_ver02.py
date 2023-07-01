@@ -52,27 +52,7 @@ def get_region_and_space(context, area_type, region_type, space_type):
 
 	return (region, space)
 
-def circledraw(context,target_point_world,wheeldepth,event):
-	#print("circledrawhead")
-	#xx = event.mouse_x * wheeldepth
-	region, space = get_region_and_space(
-		context, 'VIEW_3D', 'WINDOW', 'VIEW_3D'
-	)
-	if (region is None) or (space is None):
-		return
 
-	vec = view3d_utils.location_3d_to_region_2d(
-		region,
-		space.region_3d,
-		Vector(target_point_world)
-	)
-
-	color = [1,1,1,1]
-	#print("circledraw22")
-	gpu_extras.presets.draw_circle_2d(Vector((20,20)),color,100)#vec,color,50)#wheeldepth)
-
-	
-	context.area.tag_redraw()
 
 def textdraw(context,event,target_point_world):
 	j = 1
@@ -94,8 +74,6 @@ def textdraw(context,event,target_point_world):
 
 #ハンドルには一つの関数しか入れられないので一つにまとめる。
 def drawhandlefunc(context,target_point_world,wheeldepth,event):
-	#circledraw(context,target_point_world,wheeldepth)
-	circledraw(context,target_point_world,wheeldepth,event)
 	textdraw(context,event,target_point_world)
 
 #逆変換を求める関数
@@ -110,22 +88,6 @@ def vector_rigion_by_mouse(context,event):
 	vm = Vector((event.mouse_region_x,event.mouse_region_y))
 	return vm
 
-#動作チェック済み（正常）
-#リージョン座標ベクトルををローカル座標ベクトルに変換する。
-#第一引数リージョン座標上の位置ベクトル、第二引数ローカル座標に対応するオブジェクト、第三引数深さベクトル(Vector((x,0,0))でxの値のみ有効になる）戻り値ローカル座標上のベクトル。
-def convert_region_to_local(context,vector_region,obj_local,depth):
-	region, space  = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
-	vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,vector_region,Vector((depth,0,0)))
-	matrix_world_to_local = matrixinvert(obj_local.matrix_world)
-	return (matrix_world_to_local @ vector_world)
-
-# TODO: #動作不具合:matrix_basisが回転してしまうのでできない。
-def convert_region_to_restlocal(context,vector_region,obj_local,depth):
-	region, space  = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
-	vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,vector_region,Vector((depth,0,0)))
-	matrix_world_to_restlocal = matrixinvert(obj_local.matrix_basis)
-	return matrix_world_to_restlocal @ vector_world 
-
 #動作チェック済み
 #親のcostumposeに依存した子のrestposebone座標（親カスタム子レスト）とlocal座標の位置ベクトルをrestpose座標変換する。
 #第一引数pose座標に当たるposeボーンオブジェクト,第二引数変換したいローカル座標のベクトル
@@ -133,18 +95,6 @@ def convert_local_to_custumrestpose(aposebone,local_vector):
 	local_to_custumpose = matrixinvert(aposebone.matrix)
 	local_to_restpose = aposebone.matrix_basis @ local_to_custumpose
 	return local_to_restpose @ local_vector
-
-#動作チェック済み
-#二つのベクトルのローテーションをクオータニオンで取得。
-def vector_rotaion_quaternion(v1,v2):
-	q = v1.rotation_difference(v2)
-	return q
-
-# TODO: 動作未チェック
-#オブジェクトをクオータニオンで回転させる
-def rotation_object_quaternion(quaternion,obj):
-	obj.rotation_mode = 'QUATERNION'
-	obj.rotation_quaternion = quaternion
 
 # TODO: 動作未チェック
 #matrix_basisを単位行列でリセットしてからベクトルとローテーションを得る関数
@@ -157,86 +107,6 @@ def restrotation(target_vector_local,obj_vector_local,obj):
 	q = obj_vector_local.rotation_difference(target_vector_local)
 	obj.rotation_quaternion = q
 
-
-
-# TODO: #座標変換がなに座標から何座標への変換なのかしらべる。終点だけ固定して始点を動かす（逆ベクトルを使う）。v1 = M @ v2
-#必要な情報：最初の座標行列、後の座標行列、変換行列。あるオブジェクトの位置座標を変換して
-def check_convert_system():
-	#ある座標（farst system)に存在していることがわかっているオブジェクト
-	#
-	return
-
-# TODO: #マウスの位置にボーンを回転させる。
-def active_posebone_head_go_by_mouse(context,event,wheelvalue,wheelvaluescale):
-
-	wacthvalue1 = {}
-
-	print("active_posebone_head_go_by_mouse is head")
-	active_obj = bpy.context.active_object
-	region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
-	target_point_vecter_region = Vector((event.mouse_region_x,event.mouse_region_y))
-	target_point_vecter_world  = view3d_utils.region_2d_to_location_3d(region,space.region_3d,target_point_vecter_region,Vector((wheelvalue*wheelvaluescale,0,0)))
-	world_to_local_matrix  = active_obj.matrix_world.copy()
-	world_to_local_matrix.invert()
-	#local_to_world_matrix = active_obj.matrix_world.copy()
-	#world_to_local_matrix  = local_to_world_matrix.invert()
-	target_point_vecter_local = world_to_local_matrix @ target_point_vecter_world
-
-	if active_obj.type == 'ARMATURE':
-		abone  =  bpy.context.active_bone
-		apbone =  bpy.context.active_pose_bone
-		local_to_pose_matrix = apbone.matrix.copy()
-		local_to_pose_matrix.invert()
-		
-		posebonehead_to_target_vector_local = target_point_vecter_local - apbone.head 
-		active_bone_vector_lacal = abone.vector
-
-		q = active_bone_vector_lacal.rotation_difference(posebonehead_to_target_vector_local)
-		
-		q_pose = local_to_pose_matrix @ q.to_matrix().to_4x4()
-
-		bpy.context.active_pose_bone.rotation_quaternion = q 
-		bpy.context.active_pose_bone.scale.y = abs(posebonehead_to_target_vector_local.length)/abs(abone.length)
-		
-		
-		debuglis = [target_point_vecter_region,
-	 			target_point_vecter_world,
-				target_point_vecter_local,
-				posebonehead_to_target_vector_local,
-				#posebonehead_to_target_vector_pose,
-				#active_bone_vector_pose,
-				]
-		'''
-		i = 0
-		for k1 in  debuglis :
-			
-			rounded_vec = Vector((round(x, 1) for x in k1))
-			#wacthvalue1[str(i)] = rounded_vec
-			wacthvalue1.update({str(i):rounded_vec})#debuglis.index(k1)):rounded_vec})
-			i = i +1
-		'''
-
-		
-		wacthvalue1.update({
-			"target_point_vecter_region":target_point_vecter_region,
-			"target_point_vecter_world" :target_point_vecter_world,
-			"target_point_vecter_local":target_point_vecter_local,
-			"posebonehead_to_target_vector_local":posebonehead_to_target_vector_local,
-			#"posebonehead_to_target_vector_pose":posebonehead_to_target_vector_pose,
-			#"active_bone_vector_pose":active_bone_vector_pose
-				})
-		
-		
-		
-
-	#ロケーションプロパティを持たないオブジェクトを除去できていない？
-	elif active_obj.get("location") is not None:
-		active_obj.location = target_point_vecter_world
-
-	else:
-		print("this object has not locaiton propaty,please select locationable object")
-	print("wacthvalue1",wacthvalue1)
-	return wacthvalue1
 
 # TODO: 動作未チェック
 #ホイールのeventからdepthに加減する数値を割り出す。
@@ -261,40 +131,15 @@ class testdammy22(bpy.types.Operator):
 
 	__modalrunning = False
 	obj_sphere = None
-	mvec= Vector((0,0,0))
 	init_matrix_basis = None
 	#invokeで初期化されている。
 	depth = 0
-	
-	r_point:FloatVectorProperty( 
-		name = "r_point",
-		description = "",
-		default = (0,0,0),
-		subtype = 'XYZ',
-		unit = 'LENGTH',
-		#update = execute
-	)
 
 	@classmethod
 	def is_modalrunning(cls):
-		return cls.__modalrunning
+		return cls.modalrunning
 	
 	def execute(self,context):
-
-		print("hello testdammy22")
-		
-		radius = 0.5
-		location = Vector((0,0,5))
-		#r_point = Vector((0,5,0))
-		self.r_point =Vector((0,-5,0))
-		
-		bpy.ops.mesh.primitive_uv_sphere_add(radius= radius,location = location,align='CURSOR')
-		obj_sphere = bpy.context.active_object
-		obj_sphere.rotation_mode = 'QUATERNION'
-		q = vector_rotaion_quaternion(location,self.r_point)
-		obj_sphere.rotation_quaternion = q
-
-
 		return {'FINISHED'}
 	
 	
@@ -304,10 +149,11 @@ class testdammy22(bpy.types.Operator):
 
 		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
 
+	
 		#escキーで終了
 		if event.type == 'ESC':
 			print("Pushesc")
-			dammy22.__modalrunning = False
+			testdammy22.__modalrunning = False
 			return {'FINISHED'}
 		
 		#イベントからマウスのリージョン座標を取得
@@ -318,10 +164,10 @@ class testdammy22(bpy.types.Operator):
 		
 		#このあたりが何かおかしい,ローテーションの位置
 		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
-		vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((self.depth,0,0)))
+		vector_mouse_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((self.depth,0,0)))
 
-		mvec_local = self.init_matrix_basis @ vector_world
-		#print(mvec)
+		#マウスの座標
+		mvec_local = self.init_matrix_basis @ vector_mouse_world
 		self.obj_sphere.show_axis = True
 		
 		
@@ -343,7 +189,7 @@ class testdammy22(bpy.types.Operator):
 			if not self.is_modalrunning():
 				
 				# モーダルモードを開始
-				dammy22.__modalrunning = True
+				testdammy22.__modalrunning = True
 				mh = context.window_manager.modal_handler_add(self)
 				#変数の初期化
 				self.depth = 0
@@ -354,11 +200,10 @@ class testdammy22(bpy.types.Operator):
 				self.init_matrix_basis = self.obj_sphere.matrix_world.copy()
 
 				return {'RUNNING_MODAL'}
-				#return {'PASS_THROUGH'}
 			
 			else:
 				#__modalrunningがtrueなら終了
-				dammy22.__modalrunning = False				
+				testdammy22.__modalrunning = False				
 				return {'FINISHED'}
 		
 #マウスとホイールを使ってオブジェクトの位置を動かす。
@@ -374,15 +219,6 @@ class testdammy22_lcation(bpy.types.Operator):
 	init_matrix_basis = None
 	#invokeで初期化されている。
 	depth = 0
-	
-	r_point:FloatVectorProperty( 
-		name = "r_point",
-		description = "",
-		default = (0,0,0),
-		subtype = 'XYZ',
-		unit = 'LENGTH',
-		#update = execute
-	)
 
 	@classmethod
 	def is_modalrunning(cls):
@@ -447,14 +283,11 @@ class testdammy22_bone(bpy.types.Operator):
 	bl_description = ""
 	#bl_options = {'REGISTER','UNDO'}
 
-	__modalrunning = False
-	obj_sphere = None
-	mvec_bone= Vector((0,0,0))
-	
-	depth = 0
-	
+	__modalrunning = False	
+	depth = 0	
 	init_matrix_basis = None
 	apbone = None
+
 	#M:matrix,c:custum,r:rest,l:local,p:pose,larm:localarmature
 	M_l_to_cpbone = None
 	M_l_to_rpbone = None
@@ -465,16 +298,12 @@ class testdammy22_bone(bpy.types.Operator):
 		return cls.__modalrunning
 
 	def execute(self,context):
-	
-		
 		ap = bpy.data.objects["アーマチュア"].pose.bones[2]
-		
 		local_vector = Vector((0,0,3))
 
 		cdv = convert_local_to_custumrestpose(aposebone=ap,local_vector=local_vector)
 		bpy.ops.mesh.primitive_cube_add(location=cdv)
-		
-	
+
 	def modal(self,context,event):
 		
 		region,space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
@@ -484,7 +313,7 @@ class testdammy22_bone(bpy.types.Operator):
 		#escキーで終了
 		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			print("Pushesc")
-			dammy22.__modalrunning = False
+			testdammy22_bone.__modalrunning = False
 			return {'FINISHED'}
 		
 		#ホイールのイベントからデプス値を設定
@@ -533,7 +362,7 @@ class testdammy22_bone(bpy.types.Operator):
 			self.depth = 0
 			
 
-			dammy22.__modalrunning = True
+			testdammy22_bone.__modalrunning = True
 			mh = context.window_manager.modal_handler_add(self)
 
 			self.apbone = bpy.context.active_pose_bone
@@ -546,157 +375,10 @@ class testdammy22_bone(bpy.types.Operator):
 			return {'RUNNING_MODAL'}
 
 		else:
-			dammy22.__modalrunning = False				
+			testdammy22_bone.__modalrunning = False				
 			return {'FINISHED'}
 
 
-class dammy22(bpy.types.Operator):
-	print("dammy22classhead******************************************")
-
-	bl_idname = "test.dammy22ver02"
-	bl_label = "transform to born depth"
-	bl_description = "transform of born to  depth  direction by mouse wheel"
-	#bl_options = {'REGISTER','UNDO'}
-
-	__modalrunning = False
-	__countmodal = 0
-	__select_location = [0,0,0]
-	__drawhandle = None
-	#でバグ用
-	wacthvalue1 = {}
-	__ddvec = Vector((0,0,0))
-
-	wheelvalue = 0
-
-
-	#dammy22インスタンスに帰属するプロパティなのでオペレータが完了されたら解放される？
-	select_location:FloatVectorProperty( 
-		
-		name = "select_location",
-		description = "",
-		default = [1,1,1],
-		subtype = 'XYZ',
-		unit = 'LENGTH',
-		#update = testmonono
-	)
-
-	@classmethod
-	def is_modalrunning(cls):
-		return cls.__modalrunning
-
-
-	@classmethod
-	def __drawhandle_add(cls,context,target_point_world,wheeldepth,event):
-		if cls.__drawhandle is None:
-			cls.__drawhandle = bpy.types.SpaceView3D.draw_handler_add(
-				drawhandlefunc, (context,target_point_world,wheeldepth,event), 'WINDOW', 'POST_PIXEL'
-				)
-		print("drawhandleadd***********************************")
-
-	@classmethod
-	def __drawhandle_remove(cls, context):
-		if not(cls.__drawhandle is  None):
-		
-			bpy.types.SpaceView3D.draw_handler_remove(
-				cls.__drawhandle, 'WINDOW'
-			)
-			cls.__drawhandle = None
-			print("drawhandleremove**************************************")
-				
-	def execute(self,context):
-		print("excutestart*******************************************************")
-		
-		#self.active_posebone_head_go_by_3Dpoint(context,self.select_location)
-
-		return {'FINISHED'}
-
-	def modal(self,context,event):
-		print("modalhead*********************************************")
-	
-		if context.area:
-			#print("redraw")
-			
-			context.area.tag_redraw()
-
-		#print("self.select_location on modalhead",self.select_location)
-		
-		
-		if not self.is_modalrunning():
-			print("cancellmodal*************************************")
-			return{'CANCELLED'}
-
-		if event.type == 'ESC':
-			print("Pushesc*****************************************")
-
-			context.area.tag_redraw()
-
-			#モーダルモードステータスオフ、ハンドラの解除ポーズモードになるはず。
-			dammy22.__modalrunning = False
-			print("callmodalremovefunc************************************************")
-			self.__drawhandle_remove(context)
-			self.__drawhandle = None
-
-			print("ESC MODAL FINISH*************************************")
-			return {'FINISHED'}
-		if event.value == 'PRESS':
-			if event.type == 'WHEELUPMOUSE':
-				self.wheelvalue = self.wheelvalue + 1
-				return {'RUNNING_MODAL'}
-			
-			if event.type == 'WHEELDOWNMOUSE':
-				self.wheelvalue = self.wheelvalue - 1
-				return {'RUNNING_MODAL'}
-			
-			if event.type == 'MIDDLEMOUSE': 
-				self.wheelvalue = 0
-				return {'RUNNING_MODAL'}
-			if event.type == 'Y':
-				return {'PASS_THROUGH'}
-
-
-		dc = active_posebone_head_go_by_mouse(context,event,self.wheelvalue,1)
-		dammy22.wacthvalue1.update(dc)
-		dammy22.__ddvec = dc
-		print("updatewacthvalue1",dammy22.wacthvalue1)
-
-
-		context.area.tag_redraw()
-		#パススルーだとカスタムプロパティは動くが、ボーンを動かす関数がは動かない。→プロパティのアップデートに入れないとだめ？
-		return {'PASS_THROUGH'}
-
-		#モーダルモードだとシェーダしか動かない。おわってから処理をする。
-		#return {'RUNNING_MODAL'}
-
-	def invoke(self, context, event):
-		print("invokehead")
-
-		if context.area.type == 'VIEW_3D':
-			# パネル [Delete Faces] のボタン [Start] が押されたときの処理
-			if not self.is_modalrunning():
-				dammy22.__modalrunning = True
-
-				# モーダルモードを開始
-				print("invokemodalhandleadd***********************************************************************")
-				mh = context.window_manager.modal_handler_add(self)
-
-				if self.__drawhandle is None:
-					print("invokeCalladddrawhandle*****************************************************")
-					self.__drawhandle_add(context,self.select_location,self.select_location[2],event)
-				elif not(self.__drawhandle is None):
-					
-					self.__drawhandle_remove(context)
-
-				return {'RUNNING_MODAL'}
-
-			# パネル [Delete Faces] のボタン [Stop] が押されたときの処理
-			else:
-				dammy22.__modalrunning = False
-				print("modal invoke finish********************************************************")
-			return {'FINISHED'}
-		else:
-			return {'CANCELLED'}
-		
-		return {'FINISHED'}
 
 
 class DAMMY22VER2_PT_PaneleObject(bpy.types.Panel):
@@ -735,6 +417,7 @@ def init_props():
         default=True
     )
 
+
 def clear_props():
     scene = bpy.types.Scene
     del scene.depthresolution
@@ -772,7 +455,6 @@ def unregister_shortcut():
 
 def menu_fn_pose(self,context):
 	self.layout.separator()
-	self.layout.operator(dammy22.bl_idname)
 	self.layout.operator(testdammy22_bone.bl_idname)
 
 def menu_fn_object(self,context):
@@ -782,7 +464,6 @@ def menu_fn_object(self,context):
 
 
 classes = [
-	dammy22,
 	testdammy22,
 	DAMMY22VER2_PT_PaneleObject,
 	testdammy22_bone,
