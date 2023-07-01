@@ -1,0 +1,52 @@
+関数：リージョンとスペースを取得する関数
+def get_region_and_space
+
+関数：逆変換を求める関数
+def matrixinvert
+
+関数：マウスをリージョン座標に変換する。
+def get_vector_mousecoord_by_rigion
+
+関数：第一引数pose座標に当たるposeボーンオブジェクト,第二引数変換したいローカル座標のベクトル
+def convert_coord_local_to_custumrestpose
+
+関数:matrix_basisのローテーションを０にしてターゲットベクトルへの回転を代入する関数
+#第一引数は回転したい方向ベクトル（ローカル座標）、第二引数はオブジェクトの基準方向（ローカル）、第三引数は回転させるオブジェクト
+def restrotation
+
+関数：ホイールのeventからdepthに加減する数値を割り出す。
+def wheeleventpulse(event,depth)
+    
+
+オペレータクラス：アクティブオブジェクトモードのZ軸（基準軸）をマウスに追従させるクラス
+class WID_OT_RotationObject(bpy.types.Operator):
+
+オペレータクラス:マウスとホイールを使ってオブジェクトの位置を動かす。
+class WID_OT_MoveObject
+
+オペレータクラス：マウスとホイールを使ってポーズボーンの向きと長さを変える
+class:WID_OT_Posebonetransform
+
+パネルクラス:オブジェクトモードのオプション用パネル
+class WID_PT_OptoionPanelObject
+
+パネルクラス：ポーズモード用パネル
+class WID_PT_OptoionPanelPose
+
+プリファレンスクラス：全体調整用クラス
+
+addon_keymaps = []
+
+def register_shortcut()
+    
+def unregister_shortcut()
+
+def menu_fn_pose
+
+def menu_fn_object
+
+classes =[]
+
+def register()
+    
+def unregister()
