@@ -1,14 +1,14 @@
-﻿import typing
+﻿#import typing
 import bpy
 from bpy.props import IntProperty,FloatVectorProperty, EnumProperty,FloatProperty
 from bpy.types import Context, Event
 from mathutils import *
-import math
-import gpu
-import gpu_extras.presets
+#import math
+#import gpu
+#import gpu_extras.presets
 from bpy.props import BoolProperty
 from bpy_extras import view3d_utils
-import bgl
+#import bgl
 import blf
 
 
@@ -149,7 +149,7 @@ class testdammy22(bpy.types.Operator):
 
 		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
 
-	
+
 		#escキーで終了
 		if event.type == 'ESC':
 			print("Pushesc")
@@ -292,6 +292,7 @@ class testdammy22_bone(bpy.types.Operator):
 	M_l_to_cpbone = None
 	M_l_to_rpbone = None
 	M_w_to_larm = None
+	l = None
 
 	@classmethod
 	def is_modalrunning(cls):
@@ -337,7 +338,7 @@ class testdammy22_bone(bpy.types.Operator):
 		M_w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
 
 		#マウスのワールド座標ベクトルをレストポーズ座標へ変換
-		V_m_rpbone = M_w_to_rpbone @ vector_mouse_world
+		V_m_rpbone = (M_w_to_rpbone @ vector_mouse_world) - self.l
 		
 		#ボーン座標のY軸方向ベクトルとマウスの座標ベクトルの回転を取得し回転。
 		self.apbone.rotation_mode = 'QUATERNION'
@@ -369,6 +370,9 @@ class testdammy22_bone(bpy.types.Operator):
 			self.M_l_to_cpbone = matrixinvert(self.apbone.matrix)
 			self.M_l_to_rpbone = self.apbone.matrix_basis @ self.M_l_to_cpbone
 			self.M_w_to_larm = matrixinvert(bpy.context.active_object.matrix_world)
+			#ポーズモードのローテーションを取得する。
+			(l,q,s) = self.apbone.matrix_basis.decompose()
+			self.l = l
 
 		
 			
