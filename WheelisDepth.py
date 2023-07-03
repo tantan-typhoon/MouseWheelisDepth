@@ -83,10 +83,12 @@ def wheeleventpulse(event,countwheelrotation):
 	return countwheelrotation
 
 #objectmode area--------------------------------------------------
+
+	#OPERATOR CLASS AREA***********************************************
 class WID_OT_RotationObject(bpy.types.Operator):
 	bl_idname = "wid.rotationobject"
 	bl_label = "WID_RotationObject"
-	bl_description = "Rotate objects with the mouse wheel"
+	bl_description = "Rotate object with the mouse wheel"
 	bl_options = {'REGISTER','UNDO'}
 
 	obj = None
@@ -98,21 +100,17 @@ class WID_OT_RotationObject(bpy.types.Operator):
 
 	def execute(self,context):
 		return {'FINISHED'}
-    
+	
 	def modal(self,context,event):
-
-		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
-
 		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			self.countwheelrotation = 0
 			WID_Preferences.modalrunning = False
 			self.obj.show_axis = self.init_how_axis
-			self.init_matrix_world = None 
+			self.init_matrix_world = None
 			self.obj =None
-			bpy.data.objects.remove(self.guide_obj, do_unlink=True)
-			#bpy.data.objects.remove(self.guide_obj)
-			#bpy.data.objects.remove(bpy.data.objects['WID_guide_obj'])
-			#self.guide_obj = None
+			if self.guide_obj is not None:
+				bpy.data.objects.remove(self.guide_obj, do_unlink=True)
+				self.guide_obj = None
 
 			return {'FINISHED'}
 		
@@ -121,12 +119,15 @@ class WID_OT_RotationObject(bpy.types.Operator):
 
 		self.countwheelrotation = wheeleventpulse(event,self.countwheelrotation)
 		depth = WID_Preferences.Wheel_grid_distance*self.countwheelrotation
+
+		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
 		
 		#このあたりが何かおかしい,ローテーションの位置
 		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
 		vector_mouse_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((depth,0,0)))
-
-		self.guide_obj.location = vector_mouse_world 
+		if self.guide_obj is not None:
+			self.guide_obj.location = vector_mouse_world 
+		
 		#マウスの座標
 		mvec_local = self.init_matrix_world @ vector_mouse_world
 		self.obj.show_axis = True
@@ -154,18 +155,16 @@ class WID_OT_RotationObject(bpy.types.Operator):
 					self.obj = bpy.context.active_object
 					self.obj.rotation_mode = 'QUATERNION'
 					self.init_how_axis = self.obj.show_axis
-					#self.obj.rotation_quaternion = Quaternion((1.0,0.0,0.0,0.0))
 					(l,q,s) = self.obj.matrix_world.decompose()
 					self.obj.matrix_world = Matrix.LocRotScale(l,Quaternion((1.0,0.0,0.0,0.0)),Vector((1,1,1)))
 					
 					self.init_matrix_world = self.obj.matrix_world.copy()
-					
 					self.init_matrix_world = matrixinvert(self.init_matrix_world)
 					
-
-					bpy.ops.mesh.primitive_uv_sphere_add(radius= 0.3,location = Vector((0,0,0)),align='CURSOR')
-					self.guide_obj = bpy.context.active_object
-					self.guide_obj.name = "WID_guide_obj"
+					if WID_Preferences.Guide_Object_Option :
+						bpy.ops.mesh.primitive_uv_sphere_add(radius= 0.3,location = Vector((0,0,0)),align='CURSOR')
+						self.guide_obj = bpy.context.active_object
+						self.guide_obj.name = "WID_guide_obj"
 
 					return {'RUNNING_MODAL'}
 				else:
@@ -174,43 +173,115 @@ class WID_OT_RotationObject(bpy.types.Operator):
 			else:
 				self.report({'INFO'}, "Please Make the object active")
 				return{'FINISHED'}
+			
+	
+
+
+class WID_OT_MoveObject(bpy.types.Operator):
+	bl_idname = "wid.moveobject"
+	bl_label = "WID_MoveObject"
+	bl_description = "Move object with the mouse wheel"
+	bl_options = {'REGISTER','UNDO'}
+
+	obj = None
+	guide_obj = None
+	init_matrix_world = None
+	init_how_axis = None
+	countwheelrotation = 0
+
+	def execute(self,context):
+		return {'FINISHED'}
+	
+	
+	def modal(self,context,event):
+
+		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
+			self.countwheelrotation = 0
+			WID_Preferences.modalrunning = False
+			self.obj.show_axis = self.init_how_axis
+			self.init_matrix_world = None
+			self.obj =None
+			if self.guide_obj is not None:
+				bpy.data.objects.remove(self.guide_obj, do_unlink=True)
+				self.guide_obj = None
+
+			return {'FINISHED'}
+		
+		#イベントからマウスのリージョン座標を取得
+		mouseregion = vector_rigion_by_mouse(context,event)
+		self.countwheelrotation = wheeleventpulse(event,self.countwheelrotation)
+		depth = WID_Preferences.Wheel_grid_distance*self.countwheelrotation
+
+		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
+		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
+		vector_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((depth,0,0)))
+
+		#マウスのワールド座標上にオブジェクトの位置を移動
+		self.obj.matrix_world.translation = vector_world
+
+		return {'RUNNING_MODAL'}
+	
+	def invoke(self, context, event):
+		if context.area.type == 'VIEW_3D':
+			if bpy.context.active_object is not None:
+				if not WID_Preferences.modalrunning:
+					WID_Preferences.modalrunning = True
+					WID_Preferences.Wheel_grid_distance = 1
+					
+					mh = context.window_manager.modal_handler_add(self)
+					self.obj = bpy.context.active_object
+					self.init_how_axis = self.obj.show_axis
+					return {'RUNNING_MODAL'}
+			else:
+				WID_Preferences.modalrunning = False
+				return {'FINISHED'}
+
+	#Panel CLASS AREA******************************************************************
 
 
 #common area-------------------------------------------------
 class WID_Preferences(bpy.types.AddonPreferences):
-    bl_idname = __name__
+	bl_idname = __name__
 
-    modalrunning = False
+	modalrunning = False
 
-    Wheel_grid_distance:FloatProperty(
-        name="Wheel_grid_distance",
-        description="Distance moved in one wheel rotation",
-        default=1,
-        min=0,
-    )
+	Wheel_grid_distance:FloatProperty(
+		name="Wheel_grid_distance",
+		description="Distance moved in one wheel rotation",
+		default=1,
+		min=0,
+	)
 
-    LengthOption:BoolProperty(
-        name="LengthOption",
-        description="Whether to change the length",
-        default=True
-    )
+	LengthOption:BoolProperty(
+		name="LengthOption",
+		description="Whether to change the length",
+		default=True
+	)
 
-    '''
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text="Key for the assignment: ")
-    '''
+	Guide_Object_Option:BoolProperty(
+		name="Guide_Object_Option",
+		description="Whether to use guide balls or not",
+		default=False
+	)
+
+	'''
+	def draw(self, context):
+		layout = self.layout
+		layout.label(text="Key for the assignment: ")
+	'''
 
 
 def menu_fn_object(self,context):
 	self.layout.separator()
 	self.layout.operator(WID_OT_RotationObject.bl_idname)
-	#self.layout.operator(testdammy22_lcation.bl_idname)
+	self.layout.operator(WID_OT_MoveObject.bl_idname)
+	self.layout.separator()
 
 
 classes = [
 	WID_OT_RotationObject,
 	WID_Preferences,
+	WID_OT_MoveObject,
 ]
 
 
