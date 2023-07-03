@@ -34,6 +34,7 @@ class WID_PT_OptoionPanelObject
 class WID_PT_OptoionPanelPose
 
 プリファレンスクラス：全体調整用クラス
+class WID__Preferences
 
 addon_keymaps = []
 
