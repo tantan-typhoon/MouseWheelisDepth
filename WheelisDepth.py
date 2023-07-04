@@ -84,7 +84,7 @@ def wheeleventpulse(event,countwheelrotation):
 
 #objectmode area--------------------------------------------------
 
-	#OPERATOR CLASS AREA***********************************************
+#	OPERATOR CLASS AREA***********************************************
 class WID_OT_RotationObject(bpy.types.Operator):
 	bl_idname = "wid.rotationobject"
 	bl_label = "WID_RotationObject"
@@ -97,6 +97,10 @@ class WID_OT_RotationObject(bpy.types.Operator):
 	init_how_axis = None
 	countwheelrotation = 0
 	prefs = None
+
+	@classmethod
+	def poll(cls, context):
+		return context.mode == 'OBJECT'
 
 
 	def execute(self,context):
@@ -176,8 +180,6 @@ class WID_OT_RotationObject(bpy.types.Operator):
 			else:
 				self.report({'INFO'}, "Please Make the object active")
 				return{'FINISHED'}
-			
-	
 
 
 class WID_OT_MoveObject(bpy.types.Operator):
@@ -192,6 +194,10 @@ class WID_OT_MoveObject(bpy.types.Operator):
 	init_how_axis = None
 	countwheelrotation = 0
 	prefs = None
+
+	@classmethod
+	def poll(cls, context):
+		return context.mode == 'OBJECT'
 
 	def execute(self,context):
 		return {'FINISHED'}
@@ -240,9 +246,7 @@ class WID_OT_MoveObject(bpy.types.Operator):
 				self.prefs.modalrunning = False
 				return {'FINISHED'}
 
-	
-
-#Panel CLASS AREA******************************************************************
+#	Panel CLASS AREA******************************************************************
 class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
 	bl_label = "WID_Option"
 	bl_space_type = 'VIEW_3D'
@@ -260,7 +264,7 @@ class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
 		
 #POSE MODE AREA------------------------------------------------------------
 
-	#OPETATOR CLASS AREA***************************************************
+#	OPETATOR CLASS AREA***************************************************
 class WID_OT_Posebonetransform(bpy.types.Operator):
 	bl_idname = "wid.posebonetransform"
 	bl_label = "PoseboneTransform"
@@ -271,6 +275,10 @@ class WID_OT_Posebonetransform(bpy.types.Operator):
 	apbone = None
 	prefs = None
 	countwheelrotation = 0
+
+	@classmethod
+	def poll(cls, context):
+		return context.mode == 'POSE'
 
 	#M:matrix,c:custum,r:rest,l:local,p:pose,larm:localarmature
 	M_l_to_cpbone = None
@@ -343,7 +351,7 @@ class WID_OT_Posebonetransform(bpy.types.Operator):
 			self.prefs.modalrunning = False				
 			return {'FINISHED'}
 
-#PANEL CLASS AREA*******************************************************************
+#	PANEL CLASS AREA*******************************************************************
 class WID_PT_OptoionPanelPose(bpy.types.Panel):
 	bl_label = "WID_PT_OptoionPanelPose"
 	bl_space_type = 'VIEW_3D'
@@ -358,7 +366,6 @@ class WID_PT_OptoionPanelPose(bpy.types.Panel):
 		prefs = bpy.context.preferences.addons[__name__].preferences
 		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
 		layout.prop(prefs,"LengthOption",text = "LengthOption")
-		
 
 #common area-------------------------------------------------
 class WID_Preferences(bpy.types.AddonPreferences):
@@ -385,16 +392,55 @@ class WID_Preferences(bpy.types.AddonPreferences):
 		default=False
 	)
 
-	'''
-	def draw(self, context):
-		layout = self.layout
-		layout.label(text="Key for the assignment: ")
-	'''
+addon_keymaps = []
+def register_shortcut():
+		wm = bpy.context.window_manager
+		kc = wm.keyconfigs.addon
+		if kc:
+			km = kc.keymaps.new(name="3D View", space_type='VIEW_3D')
+			km1 = km.keymap_items.new(
+			idname=WID_OT_RotationObject.bl_idname,
+			type='R',
+			value='PRESS',
+			shift=True,
+			ctrl=False,
+			alt=False,
+			)
+		
+			km2 = km.keymap_items.new(
+			idname=WID_OT_MoveObject.bl_idname,
+			type='F',
+			value='PRESS',
+			shift=True,
+			ctrl=False,
+			alt=False,
+			)
+
+			km3 = km.keymap_items.new(
+			idname=WID_OT_Posebonetransform.bl_idname,
+			type='T',
+			value='PRESS',
+			shift=True,
+			ctrl=False,
+			alt=False,
+			)
 
 
+		# ショートカットキー一覧に登録
+		addon_keymaps.append((km, km1))
+		addon_keymaps.append((km, km2))
+		addon_keymaps.append((km, km3))
 
-
-
+def unregister_shortcut():
+	for km, kmi in addon_keymaps:
+	# ショートカットキーの登録解除
+	# 引数
+	#   第1引数: km.keymap_items.newで作成したショートカットキー
+	#            [bpy.types.KeyMapItem]
+		km.keymap_items.remove(kmi)
+	# ショートカットキー一覧をクリア
+	addon_keymaps.clear()
+	
 
 def menu_fn_object(self,context):
 	self.layout.separator()
@@ -420,7 +466,7 @@ def register():
 	for c in classes:
 		bpy.utils.register_class(c)
 
-	#register_shortcut()
+	register_shortcut()
 	bpy.types.VIEW3D_MT_pose.prepend(menu_fn_posemode)
 	#bpy.types.VIEW3D_MT_object.append(menu_fn_object)
 	
@@ -428,7 +474,7 @@ def register():
 
 
 def unregister():
-	#unregister_shortcut()
+	unregister_shortcut()
 	bpy.types.VIEW3D_MT_pose.remove(menu_fn_posemode)
 	bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
 	
