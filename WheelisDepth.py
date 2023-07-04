@@ -344,7 +344,21 @@ class WID_OT_Posebonetransform(bpy.types.Operator):
 			return {'FINISHED'}
 
 #PANEL CLASS AREA*******************************************************************
+class WID_PT_OptoionPanelPose(bpy.types.Panel):
+	bl_label = "WID_PT_OptoionPanelPose"
+	bl_space_type = 'VIEW_3D'
+	bl_region_type = 'UI'
+	bl_category = "WID"
+	bl_context = "posemode"
 
+
+	def draw(self,context):
+		
+		layout = self.layout
+		prefs = bpy.context.preferences.addons[__name__].preferences
+		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
+		layout.prop(prefs,"LengthOption",text = "LengthOption")
+		
 
 #common area-------------------------------------------------
 class WID_Preferences(bpy.types.AddonPreferences):
@@ -398,6 +412,7 @@ classes = [
 	WID_OT_MoveObject,
 	WID_PT_OBjectmodeOptionPaneleObject,
 	WID_OT_Posebonetransform,
+	WID_PT_OptoionPanelPose,
 ]
 
 
