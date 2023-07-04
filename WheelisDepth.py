@@ -153,8 +153,6 @@ class WID_OT_RotationObject(bpy.types.Operator):
 					self.obj = None
 					self.init_matrix_world = None
 					self.prefs.modalrunning = True
-					#self.prefs.Wheel_grid_distance = 1
-					#self.prefs.Guide_Object_Option = False
 					
 					mh = context.window_manager.modal_handler_add(self)
 					self.obj = bpy.context.active_object
@@ -242,8 +240,9 @@ class WID_OT_MoveObject(bpy.types.Operator):
 				self.prefs.modalrunning = False
 				return {'FINISHED'}
 
-	#Panel CLASS AREA******************************************************************
+	
 
+#Panel CLASS AREA******************************************************************
 class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
 	bl_label = "WID_Option"
 	bl_space_type = 'VIEW_3D'
@@ -259,6 +258,93 @@ class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
 		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
 		layout.prop(prefs,"Guide_Object_Option",text = "Guide_Object_Option")
 		
+#POSE MODE AREA------------------------------------------------------------
+
+	#OPETATOR CLASS AREA***************************************************
+class WID_OT_Posebonetransform(bpy.types.Operator):
+	bl_idname = "wid.posebonetransform"
+	bl_label = "PoseboneTransform"
+	bl_description = "To Move Pose Bones with the Mouse Wheel"
+	bl_options = {'REGISTER','UNDO'}
+	
+	init_matrix_basis = None
+	apbone = None
+	prefs = None
+	countwheelrotation = 0
+
+	#M:matrix,c:custum,r:rest,l:local,p:pose,larm:localarmature
+	M_l_to_cpbone = None
+	M_l_to_rpbone = None
+	M_w_to_larm = None
+	l = None
+
+
+	def execute(self,context):
+		return {'FINISHED'}
+
+	def modal(self,context,event):
+
+		#escキーで終了
+		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
+			self.prefs.modalrunning = False
+			return {'FINISHED'}
+		
+		#ホイールのイベントからデプス値を設定
+		self.countwheelrotation =  wheeleventpulse(event,self.countwheelrotation)
+		
+		#解像度を掛け算
+		d = self.prefs.Wheel_grid_distance * self.countwheelrotation
+
+		#イベントからマウスのリージョン座標を取得
+		mouseregion = vector_rigion_by_mouse(context,event)
+		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
+		region,space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
+		vector_mouse_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((d,0,0)))
+		#ボーン座標上のy向き単位ベクトル
+		vector_y = Vector((0,1,0))
+		
+		#ワールド座標からレストポーズ座標への変換行列を取得
+		M_w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
+
+		#マウスのワールド座標ベクトルをレストポーズ座標へ変換
+		V_m_rpbone = (M_w_to_rpbone @ vector_mouse_world) - self.l
+		
+		#ボーン座標のY軸方向ベクトルとマウスの座標ベクトルの回転を取得し回転。
+		self.apbone.rotation_mode = 'QUATERNION'
+		q = vector_y.rotation_difference(V_m_rpbone)
+		self.apbone.rotation_quaternion = q
+
+		#長さのスケールを変更
+		if self.prefs.LengthOption :
+			self.apbone.scale.y = V_m_rpbone.length/vector_y.length
+
+		return {'RUNNING_MODAL'}
+
+	def invoke(self, context, event):
+		self.prefs = bpy.context.preferences.addons[__name__].preferences
+		if not self.prefs.modalrunning:
+
+			self.prefs.modalrunning = True
+			mh = context.window_manager.modal_handler_add(self)
+
+			self.countwheelrotation = 0
+
+			self.apbone = bpy.context.active_pose_bone
+			self.M_l_to_cpbone = matrixinvert(self.apbone.matrix)
+			self.M_l_to_rpbone = self.apbone.matrix_basis @ self.M_l_to_cpbone
+			self.M_w_to_larm = matrixinvert(bpy.context.active_object.matrix_world)
+			#ポーズモードのローテーションを取得する。
+			(l,q,s) = self.apbone.matrix_basis.decompose()
+			self.l = l
+
+			return {'RUNNING_MODAL'}
+
+		else:
+			self.prefs.modalrunning = False				
+			return {'FINISHED'}
+
+#PANEL CLASS AREA*******************************************************************
+
 
 #common area-------------------------------------------------
 class WID_Preferences(bpy.types.AddonPreferences):
@@ -302,12 +388,16 @@ def menu_fn_object(self,context):
 	self.layout.operator(WID_OT_MoveObject.bl_idname)
 	self.layout.separator()
 
+def menu_fn_posemode(self,context):
+	self.layout.separator()
+	self.layout.operator(WID_OT_Posebonetransform.bl_idname)
 
 classes = [
 	WID_OT_RotationObject,
 	WID_Preferences,
 	WID_OT_MoveObject,
-	WID_PT_OBjectmodeOptionPaneleObject
+	WID_PT_OBjectmodeOptionPaneleObject,
+	WID_OT_Posebonetransform,
 ]
 
 
@@ -316,7 +406,7 @@ def register():
 		bpy.utils.register_class(c)
 
 	#register_shortcut()
-	#bpy.types.VIEW3D_MT_pose.append(menu_fn_pose)
+	bpy.types.VIEW3D_MT_pose.prepend(menu_fn_posemode)
 	#bpy.types.VIEW3D_MT_object.append(menu_fn_object)
 	
 	bpy.types.VIEW3D_MT_object.prepend(menu_fn_object)
@@ -324,7 +414,7 @@ def register():
 
 def unregister():
 	#unregister_shortcut()
-	#bpy.types.VIEW3D_MT_pose.remove(menu_fn_pose)
+	bpy.types.VIEW3D_MT_pose.remove(menu_fn_posemode)
 	bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
 	
 	for c in classes:
