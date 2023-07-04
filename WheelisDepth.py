@@ -96,6 +96,7 @@ class WID_OT_RotationObject(bpy.types.Operator):
 	init_matrix_world = None
 	init_how_axis = None
 	countwheelrotation = 0
+	prefs = None
 
 
 	def execute(self,context):
@@ -104,7 +105,7 @@ class WID_OT_RotationObject(bpy.types.Operator):
 	def modal(self,context,event):
 		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			self.countwheelrotation = 0
-			WID_Preferences.modalrunning = False
+			self.prefs.modalrunning = False
 			self.obj.show_axis = self.init_how_axis
 			self.init_matrix_world = None
 			self.obj =None
@@ -118,7 +119,7 @@ class WID_OT_RotationObject(bpy.types.Operator):
 		mouseregion = vector_rigion_by_mouse(context,event)
 
 		self.countwheelrotation = wheeleventpulse(event,self.countwheelrotation)
-		depth = WID_Preferences.Wheel_grid_distance*self.countwheelrotation
+		depth = self.prefs.Wheel_grid_distance*self.countwheelrotation
 
 		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
 		
@@ -143,15 +144,18 @@ class WID_OT_RotationObject(bpy.types.Operator):
 		return {'RUNNING_MODAL'}
 	
 	def invoke(self, context, event):
+		self.prefs = bpy.context.preferences.addons[__name__].preferences
 		if context.area.type == 'VIEW_3D':
+			
 			if bpy.context.active_object is not None:
-				if not WID_Preferences.modalrunning:
+				if not self.prefs.modalrunning:
 					self.countwheelrotation = 0
 					self.obj = None
 					self.init_matrix_world = None
-					WID_Preferences.modalrunning = True
-					WID_Preferences.Wheel_grid_distance = 1
-					WID_Preferences.Guide_Object_Option = False
+					self.prefs.modalrunning = True
+					#self.prefs.Wheel_grid_distance = 1
+					#self.prefs.Guide_Object_Option = False
+					
 					mh = context.window_manager.modal_handler_add(self)
 					self.obj = bpy.context.active_object
 					self.obj.rotation_mode = 'QUATERNION'
@@ -162,14 +166,14 @@ class WID_OT_RotationObject(bpy.types.Operator):
 					self.init_matrix_world = self.obj.matrix_world.copy()
 					self.init_matrix_world = matrixinvert(self.init_matrix_world)
 					
-					if WID_Preferences.Guide_Object_Option :
+					if self.prefs.Guide_Object_Option :
 						bpy.ops.mesh.primitive_uv_sphere_add(radius= 0.3,location = Vector((0,0,0)),align='CURSOR')
 						self.guide_obj = bpy.context.active_object
 						self.guide_obj.name = "WID_guide_obj"
 
 					return {'RUNNING_MODAL'}
 				else:
-					WID_Preferences.modalrunning = False
+					self.prefs.modalrunning = False
 					return {'FINISHED'}
 			else:
 				self.report({'INFO'}, "Please Make the object active")
@@ -199,20 +203,18 @@ class WID_OT_MoveObject(bpy.types.Operator):
 
 		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			self.countwheelrotation = 0
-			WID_Preferences.modalrunning = False
+			self.prefs.modalrunning = False
 			self.obj.show_axis = self.init_how_axis
 			self.init_matrix_world = None
 			self.obj =None
-			if self.guide_obj is not None:
-				bpy.data.objects.remove(self.guide_obj, do_unlink=True)
-				self.guide_obj = None
+			
 
 			return {'FINISHED'}
 		
 		#イベントからマウスのリージョン座標を取得
 		mouseregion = vector_rigion_by_mouse(context,event)
 		self.countwheelrotation = wheeleventpulse(event,self.countwheelrotation)
-		depth = WID_Preferences.Wheel_grid_distance*self.countwheelrotation
+		depth = self.prefs.Wheel_grid_distance*self.countwheelrotation
 
 		#マウスの位置のローカル座標ベクトルを取得(これはあっている確認済)
 		region, space = get_region_and_space(context, 'VIEW_3D', 'WINDOW', 'VIEW_3D')
@@ -224,20 +226,20 @@ class WID_OT_MoveObject(bpy.types.Operator):
 		return {'RUNNING_MODAL'}
 	
 	def invoke(self, context, event):
+		self.prefs = bpy.context.preferences.addons[__name__].preferences
 		if context.area.type == 'VIEW_3D':
 			if bpy.context.active_object is not None:
-				self.prefs = bpy.context.preferences.addons[__name__].preferences
-				if not WID_Preferences.modalrunning:
-					self.prefs.modalrunning
-					#WID_Preferences.modalrunning = True
-					#WID_Preferences.Wheel_grid_distance = 1
-					
+				
+				if not self.prefs.modalrunning:
+					self.prefs.modalrunning = True
+					self.prefs.Wheel_grid_distanc = 1
 					mh = context.window_manager.modal_handler_add(self)
 					self.obj = bpy.context.active_object
 					self.init_how_axis = self.obj.show_axis
+					
 					return {'RUNNING_MODAL'}
 			else:
-				WID_Preferences.modalrunning = False
+				self.prefs.modalrunning = False
 				return {'FINISHED'}
 
 	#Panel CLASS AREA******************************************************************
