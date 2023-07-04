@@ -151,6 +151,7 @@ class WID_OT_RotationObject(bpy.types.Operator):
 					self.init_matrix_world = None
 					WID_Preferences.modalrunning = True
 					WID_Preferences.Wheel_grid_distance = 1
+					WID_Preferences.Guide_Object_Option = False
 					mh = context.window_manager.modal_handler_add(self)
 					self.obj = bpy.context.active_object
 					self.obj.rotation_mode = 'QUATERNION'
@@ -188,6 +189,7 @@ class WID_OT_MoveObject(bpy.types.Operator):
 	init_matrix_world = None
 	init_how_axis = None
 	countwheelrotation = 0
+	prefs = None
 
 	def execute(self,context):
 		return {'FINISHED'}
@@ -224,9 +226,11 @@ class WID_OT_MoveObject(bpy.types.Operator):
 	def invoke(self, context, event):
 		if context.area.type == 'VIEW_3D':
 			if bpy.context.active_object is not None:
+				self.prefs = bpy.context.preferences.addons[__name__].preferences
 				if not WID_Preferences.modalrunning:
-					WID_Preferences.modalrunning = True
-					WID_Preferences.Wheel_grid_distance = 1
+					self.prefs.modalrunning
+					#WID_Preferences.modalrunning = True
+					#WID_Preferences.Wheel_grid_distance = 1
 					
 					mh = context.window_manager.modal_handler_add(self)
 					self.obj = bpy.context.active_object
@@ -238,6 +242,21 @@ class WID_OT_MoveObject(bpy.types.Operator):
 
 	#Panel CLASS AREA******************************************************************
 
+class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
+	bl_label = "WID_Option"
+	bl_space_type = 'VIEW_3D'
+	bl_region_type = 'UI'
+	bl_category = "WID"
+	bl_context = "objectmode"
+
+
+	def draw(self,context):
+		
+		layout = self.layout
+		prefs = bpy.context.preferences.addons[__name__].preferences
+		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
+		layout.prop(prefs,"Guide_Object_Option",text = "Guide_Object_Option")
+		
 
 #common area-------------------------------------------------
 class WID_Preferences(bpy.types.AddonPreferences):
@@ -271,6 +290,10 @@ class WID_Preferences(bpy.types.AddonPreferences):
 	'''
 
 
+
+
+
+
 def menu_fn_object(self,context):
 	self.layout.separator()
 	self.layout.operator(WID_OT_RotationObject.bl_idname)
@@ -282,6 +305,7 @@ classes = [
 	WID_OT_RotationObject,
 	WID_Preferences,
 	WID_OT_MoveObject,
+	WID_PT_OBjectmodeOptionPaneleObject
 ]
 
 
