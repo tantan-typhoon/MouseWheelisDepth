@@ -402,7 +402,7 @@ class WID_Preferences(bpy.types.AddonPreferences):
 	LengthOption:BoolProperty(
 		name="LengthOption",
 		description="Whether to change the length",
-		default=True
+		default=False
 	)
 
 	Guide_Object_Option:BoolProperty(
