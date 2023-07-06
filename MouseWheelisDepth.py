@@ -26,7 +26,7 @@ from bpy_extras import view3d_utils
 import blf
 
 bl_info = {
-	"name":"WheelisDepth",
+	"name":"MouseWheelisDepth",
 	"author":"tantan_typhoon",
 	"version":(1.0),
 	"blender":(3,3,7),
@@ -103,9 +103,9 @@ def wheeleventpulse(event,countwheelrotation):
 #objectmode area--------------------------------------------------
 
 #	OPERATOR CLASS AREA***********************************************
-class WID_OT_RotationObject(bpy.types.Operator):
-	bl_idname = "wid.rotationobject"
-	bl_label = "WID_RotationObject"
+class MWID_OT_RotationObject(bpy.types.Operator):
+	bl_idname = "mwid.rotationobject"
+	bl_label = "MWID_RotationObject"
 	bl_description = "Rotate object with the mouse wheel"
 	bl_options = {'REGISTER','UNDO'}
 
@@ -189,7 +189,7 @@ class WID_OT_RotationObject(bpy.types.Operator):
 					if self.prefs.Guide_Object_Option :
 						bpy.ops.mesh.primitive_uv_sphere_add(radius= 0.3,location = Vector((0,0,0)),align='CURSOR')
 						self.guide_obj = bpy.context.active_object
-						self.guide_obj.name = "WID_guide_obj"
+						self.guide_obj.name = "MWID_guide_obj"
 
 					return {'RUNNING_MODAL'}
 				else:
@@ -200,9 +200,9 @@ class WID_OT_RotationObject(bpy.types.Operator):
 				return{'FINISHED'}
 
 
-class WID_OT_MoveObject(bpy.types.Operator):
-	bl_idname = "wid.moveobject"
-	bl_label = "WID_MoveObject"
+class MWID_OT_MoveObject(bpy.types.Operator):
+	bl_idname = "mwid.moveobject"
+	bl_label = "MWID_MoveObject"
 	bl_description = "Move object with the mouse wheel"
 	bl_options = {'REGISTER','UNDO'}
 
@@ -265,11 +265,11 @@ class WID_OT_MoveObject(bpy.types.Operator):
 				return {'FINISHED'}
 
 #	Panel CLASS AREA******************************************************************
-class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
-	bl_label = "WID_Option"
+class MWID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
+	bl_label = "MWID_Option"
 	bl_space_type = 'VIEW_3D'
 	bl_region_type = 'UI'
-	bl_category = "WID"
+	bl_category = "MWID"
 	bl_context = "objectmode"
 
 
@@ -283,8 +283,8 @@ class WID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
 #POSE MODE AREA------------------------------------------------------------
 
 #	OPETATOR CLASS AREA***************************************************
-class WID_OT_Posebonetransform(bpy.types.Operator):
-	bl_idname = "wid.posebonetransform"
+class MWID_OT_Posebonetransform(bpy.types.Operator):
+	bl_idname = "mwid.posebonetransform"
 	bl_label = "PoseboneTransform"
 	bl_description = "To Move Pose Bones with the Mouse Wheel"
 	bl_options = {'REGISTER','UNDO'}
@@ -370,11 +370,11 @@ class WID_OT_Posebonetransform(bpy.types.Operator):
 			return {'FINISHED'}
 
 #	PANEL CLASS AREA*******************************************************************
-class WID_PT_OptoionPanelPose(bpy.types.Panel):
-	bl_label = "WID_PT_OptoionPanelPose"
+class MWID_PT_OptoionPanelPose(bpy.types.Panel):
+	bl_label = "MWID_PT_OptoionPanelPose"
 	bl_space_type = 'VIEW_3D'
 	bl_region_type = 'UI'
-	bl_category = "WID"
+	bl_category = "MWID"
 	bl_context = "posemode"
 
 
@@ -386,7 +386,7 @@ class WID_PT_OptoionPanelPose(bpy.types.Panel):
 		layout.prop(prefs,"LengthOption",text = "LengthOption")
 
 #common area-------------------------------------------------
-class WID_Preferences(bpy.types.AddonPreferences):
+class MWID_Preferences(bpy.types.AddonPreferences):
 	bl_idname = __name__
 
 	modalrunning = False
@@ -417,7 +417,7 @@ def register_shortcut():
 		if kc:
 			km = kc.keymaps.new(name="3D View", space_type='VIEW_3D')
 			km1 = km.keymap_items.new(
-			idname=WID_OT_RotationObject.bl_idname,
+			idname=MWID_OT_RotationObject.bl_idname,
 			type='R',
 			value='PRESS',
 			shift=True,
@@ -426,7 +426,7 @@ def register_shortcut():
 			)
 		
 			km2 = km.keymap_items.new(
-			idname=WID_OT_MoveObject.bl_idname,
+			idname=MWID_OT_MoveObject.bl_idname,
 			type='F',
 			value='PRESS',
 			shift=True,
@@ -435,7 +435,7 @@ def register_shortcut():
 			)
 
 			km3 = km.keymap_items.new(
-			idname=WID_OT_Posebonetransform.bl_idname,
+			idname=MWID_OT_Posebonetransform.bl_idname,
 			type='T',
 			value='PRESS',
 			shift=True,
@@ -462,21 +462,21 @@ def unregister_shortcut():
 
 def menu_fn_object(self,context):
 	self.layout.separator()
-	self.layout.operator(WID_OT_RotationObject.bl_idname)
-	self.layout.operator(WID_OT_MoveObject.bl_idname)
+	self.layout.operator(MWID_OT_RotationObject.bl_idname)
+	self.layout.operator(MWID_OT_MoveObject.bl_idname)
 	self.layout.separator()
 
 def menu_fn_posemode(self,context):
 	self.layout.separator()
-	self.layout.operator(WID_OT_Posebonetransform.bl_idname)
+	self.layout.operator(MWID_OT_Posebonetransform.bl_idname)
 
 classes = [
-	WID_OT_RotationObject,
-	WID_Preferences,
-	WID_OT_MoveObject,
-	WID_PT_OBjectmodeOptionPaneleObject,
-	WID_OT_Posebonetransform,
-	WID_PT_OptoionPanelPose,
+	MWID_OT_RotationObject,
+	MWID_Preferences,
+	MWID_OT_MoveObject,
+	MWID_PT_OBjectmodeOptionPaneleObject,
+	MWID_OT_Posebonetransform,
+	MWID_PT_OptoionPanelPose,
 ]
 
 
