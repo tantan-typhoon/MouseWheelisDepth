@@ -1,4 +1,4 @@
-# MoseWheelisDepth
+# MouseWheelisDepth
 MouseWheelisDepth addon
 
 This Blender add-on allows you to use the mouse wheel to move in the DEPTH direction.
