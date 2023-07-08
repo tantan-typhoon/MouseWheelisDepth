@@ -181,7 +181,8 @@ class MWID_OT_RotationObject(bpy.types.Operator):
 					self.obj.rotation_mode = 'QUATERNION'
 					self.init_how_axis = self.obj.show_axis
 					(l,q,s) = self.obj.matrix_world.decompose()
-					self.obj.matrix_world = Matrix.LocRotScale(l,Quaternion((1.0,0.0,0.0,0.0)),Vector((1,1,1)))
+					
+					self.obj.matrix_world = Matrix.LocRotScale(l,Quaternion((1.0,0.0,0.0,0.0)),s)
 					
 					self.init_matrix_world = self.obj.matrix_world.copy()
 					self.init_matrix_world = matrixinvert(self.init_matrix_world)
