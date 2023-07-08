@@ -429,7 +429,7 @@ class MWID_Preferences(bpy.types.AddonPreferences):
 	Guide_Object_Option:BoolProperty(
 		name="Guide_Object_Option",
 		description="Whether to use guide balls or not",
-		default=False
+		default=True
 	)
 
 addon_keymaps = []
