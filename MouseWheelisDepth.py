@@ -277,6 +277,10 @@ class MWID_PT_OBjectmodeOptionPaneleObject(bpy.types.Panel):
 		
 		layout = self.layout
 		prefs = bpy.context.preferences.addons[__name__].preferences
+		layout.operator(MWID_OT_RotationObject.bl_idname, text="RotationObject")
+		layout.label(text="shortcutkey:R+Shift")
+		layout.operator(MWID_OT_MoveObject.bl_idname, text="MoveObject")
+		layout.label(text="shortcutkey:F+Shift")
 		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
 		layout.prop(prefs,"Guide_Object_Option",text = "Guide_Object_Option")
 		
@@ -382,6 +386,8 @@ class MWID_PT_OptoionPanelPose(bpy.types.Panel):
 		
 		layout = self.layout
 		prefs = bpy.context.preferences.addons[__name__].preferences
+		layout.operator(MWID_OT_Posebonetransform.bl_idname, text="Posebonetransform")
+		layout.label(text="shortcutkey:T+Shift")
 		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
 		layout.prop(prefs,"LengthOption",text = "LengthOption")
 
@@ -394,7 +400,7 @@ class MWID_Preferences(bpy.types.AddonPreferences):
 	Wheel_grid_distance:FloatProperty(
 		name="Wheel_grid_distance",
 		description="Distance moved in one wheel rotation",
-		default=1,
+		default=0.5,
 		min=0,
 	)
 
@@ -485,16 +491,16 @@ def register():
 		bpy.utils.register_class(c)
 
 	register_shortcut()
-	bpy.types.VIEW3D_MT_pose.prepend(menu_fn_posemode)
+	#bpy.types.VIEW3D_MT_pose.prepend(menu_fn_posemode)
 	#bpy.types.VIEW3D_MT_object.append(menu_fn_object)
 	
-	bpy.types.VIEW3D_MT_object.prepend(menu_fn_object)
+	#bpy.types.VIEW3D_MT_object.prepend(menu_fn_object)
 
 
 def unregister():
 	unregister_shortcut()
-	bpy.types.VIEW3D_MT_pose.remove(menu_fn_posemode)
-	bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
+	#bpy.types.VIEW3D_MT_pose.remove(menu_fn_posemode)
+	#bpy.types.VIEW3D_MT_object.remove(menu_fn_object)
 	
 	for c in classes:
 		bpy.utils.unregister_class(c)
