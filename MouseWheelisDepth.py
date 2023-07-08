@@ -298,6 +298,7 @@ class MWID_OT_Posebonetransform(bpy.types.Operator):
 	apbone = None
 	prefs = None
 	countwheelrotation = 0
+	guide_obj = None
 
 	@classmethod
 	def poll(cls, context):
@@ -318,6 +319,11 @@ class MWID_OT_Posebonetransform(bpy.types.Operator):
 		#escキーで終了
 		if (event.type == 'ESC') or (event.type == 'LEFTMOUSE'):
 			self.prefs.modalrunning = False
+
+			if self.guide_obj is not None:
+				bpy.data.objects.remove(self.guide_obj, do_unlink=True)
+				self.guide_obj = None
+
 			return {'FINISHED'}
 		
 		#ホイールのイベントからデプス値を設定
@@ -333,6 +339,9 @@ class MWID_OT_Posebonetransform(bpy.types.Operator):
 		vector_mouse_world = view3d_utils.region_2d_to_location_3d(region,space.region_3d,mouseregion,Vector((d,0,0)))
 		#ボーン座標上のy向き単位ベクトル
 		vector_y = Vector((0,1,0))
+
+		if self.guide_obj is not None:
+			self.guide_obj.location = vector_mouse_world 
 		
 		#ワールド座標からレストポーズ座標への変換行列を取得
 		M_w_to_rpbone = self.M_l_to_rpbone @ self.M_w_to_larm
@@ -368,6 +377,11 @@ class MWID_OT_Posebonetransform(bpy.types.Operator):
 			(l,q,s) = self.apbone.matrix_basis.decompose()
 			self.l = l
 
+			if self.prefs.Guide_Object_Option :
+				bpy.ops.mesh.primitive_uv_sphere_add(radius= 0.3,location = Vector((0,0,0)),align='CURSOR')
+				self.guide_obj = bpy.context.active_object
+				self.guide_obj.name = "MWID_guide_obj"
+
 			return {'RUNNING_MODAL'}
 
 		else:
@@ -391,6 +405,7 @@ class MWID_PT_OptoionPanelPose(bpy.types.Panel):
 		layout.label(text="shortcutkey:T+Shift")
 		layout.prop(prefs,"Wheel_grid_distance",text = "Wheel_grid_distance")
 		layout.prop(prefs,"LengthOption",text = "LengthOption")
+		layout.prop(prefs,"Guide_Object_Option",text = "Guide_Object_Option")
 
 #common area-------------------------------------------------
 class MWID_Preferences(bpy.types.AddonPreferences):
