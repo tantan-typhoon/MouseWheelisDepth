@@ -1,9 +1,9 @@
 # MouseWheelisDepth
 MouseWheelisDepth addon
 
-This Blender add-on allows you to use the mouse wheel to move in the DEPTH direction.
+With this Blender add-on, you can use the mouse wheel to move and rotate in the depth direction.
 
-このBlenderアドオンを利用するとマウスホイールでdepth方向への移動が出来るようになります。
+このBlenderアドオンを利用するとマウスホイールを使ってdepth方向への移動・回転が出来るようになります。
 
 MOVE
 ![説明用漫画](MouseWheelisDepth_Move.png)
